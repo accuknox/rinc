@@ -34,6 +34,9 @@ type C struct {
 	// LongJobs contains configuration related to the long-running job
 	// reporter.
 	LongJobs LongJobs `koanf:"longRunningJobs"`
+	// ImageTag contains configuration related to the image tag
+	// reporter.
+	ImageTag ImageTag `koanf:"imageTag"`
 }
 
 // New creates a configuration using the provided arguments and config file.

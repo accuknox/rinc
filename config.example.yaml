@@ -46,3 +46,8 @@ longRunningJobs:
   #
   # Eg: 12h, 30m, 5h30m15s
   olderThan: 24h
+imageTag:
+  # enable image tag report
+  enable: false
+  # kubernetes namespace that the image tag reporter will be limited to.
+  namespace: ""
