@@ -4,8 +4,9 @@ import "github.com/accuknox/rinc/view/icon"
 
 type IndexStatus struct {
 	Name    string
+	Slug    string
 	ID      string
-	Healthy bool
+	Healthy *bool
 }
 
 templ Index(statuses []IndexStatus) {
@@ -13,11 +14,13 @@ templ Index(statuses []IndexStatus) {
 		<div class="px-3 lg:px-0 w-full lg:w-2/3 grid grid-cols-1 lg:grid-cols-3 gap-2">
 			for _, status := range statuses {
 				<a
-					href={ templ.URL("/" + status.ID + "/rabbitmq") }
+					href={ templ.URL("/" + status.ID + "/" + status.Slug) }
 					class="flex flex-col lg:flex-row bg-white p-5 justify-between items-center hover:underline rounded-md shadow-lg"
 				>
 					<div>{ status.Name }</div>
-					if status.Healthy {
+					if status.Healthy == nil {
+						@icon.RightChevron()
+					} else if *status.Healthy {
 						<div class="text-green-700">
 							@icon.Check()
 						</div>

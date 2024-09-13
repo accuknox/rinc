@@ -1,0 +1,59 @@
+package longjobs
+
+import (
+	"fmt"
+	"time"
+)
+
+type Data struct {
+	Timestamp time.Time
+	Jobs      []Job
+}
+
+type Job struct {
+	Name       string
+	Namespace  string
+	Suspended  bool
+	ActivePods int32
+	FailedPods int32
+	ReadyPods  int32
+}
+
+templ Report(data Data) {
+	@heading(data.Timestamp)
+	@jobs(data.Jobs)
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		Long Running Jobs ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+}
+
+templ jobs(jobs []Job) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Jobs</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Name</th>
+				<th>Namespace</th>
+				<th>Suspended</th>
+				<th>Active Pods</th>
+				<th>Failed Pods</th>
+				<th>Ready Pods</th>
+			</thead>
+			<tbody>
+				for _, job := range jobs {
+					<tr>
+						<td>{ job.Name }</td>
+						<td>{ job.Namespace }</td>
+						<td>{ fmt.Sprintf("%v", job.Suspended) }</td>
+						<td>{ fmt.Sprintf("%d", job.ActivePods) }</td>
+						<td>{ fmt.Sprintf("%d", job.FailedPods) }</td>
+						<td>{ fmt.Sprintf("%d", job.ReadyPods) }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}

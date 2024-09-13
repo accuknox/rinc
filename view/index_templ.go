@@ -14,8 +14,9 @@ import "github.com/accuknox/rinc/view/icon"
 
 type IndexStatus struct {
 	Name    string
+	Slug    string
 	ID      string
-	Healthy bool
+	Healthy *bool
 }
 
 func Index(statuses []IndexStatus) templ.Component {
@@ -40,7 +41,7 @@ func Index(statuses []IndexStatus) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var2 templ.SafeURL = templ.URL("/" + status.ID + "/rabbitmq")
+			var templ_7745c5c3_Var2 templ.SafeURL = templ.URL("/" + status.ID + "/" + status.Slug)
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var2)))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -52,7 +53,7 @@ func Index(statuses []IndexStatus) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(status.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/index.templ`, Line: 19, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/index.templ`, Line: 20, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -62,7 +63,12 @@ func Index(statuses []IndexStatus) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			if status.Healthy {
+			if status.Healthy == nil {
+				templ_7745c5c3_Err = icon.RightChevron().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			} else if *status.Healthy {
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"text-green-700\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

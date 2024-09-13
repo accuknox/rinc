@@ -55,6 +55,7 @@ func (s Srv) Run(ctx context.Context) {
 	s.router.GET("/", s.Index)
 	s.router.GET("/:id", s.Index)
 	s.router.GET("/:id/rabbitmq", s.RabbitMQ)
+	s.router.GET("/:id/longrunningjobs", s.LongRunningJobs)
 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()

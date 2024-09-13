@@ -75,6 +75,25 @@ func (j Job) GenerateAll(ctx context.Context) error {
 		)
 	}
 
+	if j.conf.LongJobs.Enable {
+		err := j.GenerateLongRunningJobsReport(ctx, now)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"generating long running jobs report",
+				slog.String("error", err.Error()),
+			)
+			return fmt.Errorf("generating long running jobs report: %w", err)
+		}
+		slog.LogAttrs(
+			ctx,
+			slog.LevelInfo,
+			"generated longrunningjobs.html",
+			slog.String("stamp", stamp),
+		)
+	}
+
 	return nil
 }
 
@@ -97,8 +116,17 @@ func (j Job) GenerateIndex(ctx context.Context, now time.Time) error {
 		}
 		statuses = append(statuses, view.IndexStatus{
 			Name:    "RabbitMQ",
+			Slug:    "rabbitmq",
 			ID:      stamp,
-			Healthy: up,
+			Healthy: &up,
+		})
+	}
+
+	if j.conf.LongJobs.Enable {
+		statuses = append(statuses, view.IndexStatus{
+			Name: "Long Running Jobs",
+			Slug: "longrunningjobs",
+			ID:   stamp,
 		})
 	}
 
