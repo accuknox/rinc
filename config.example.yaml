@@ -36,3 +36,13 @@ rabbitmq:
     username: ""
     # basic auth password for the management api.
     password: ""
+longRunningJobs:
+  # enable long-running jobs reporting
+  enable: false
+  # namespace in which the long-running jobs will be reported. Leave blank for
+  # all namespaces.
+  namespace: ""
+  # jobs older than this value will be reported.
+  #
+  # Eg: 12h, 30m, 5h30m15s
+  olderThan: 24h

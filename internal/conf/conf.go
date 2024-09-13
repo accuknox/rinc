@@ -31,6 +31,9 @@ type C struct {
 	KubernetesClient KubernetesClient `koanf:"kubernetesClient"`
 	// RabbitMQ contains the rabbitmq configuration.
 	RabbitMQ RabbitMQ `koanf:"rabbitmq"`
+	// LongJobs contains configuration related to the long-running job
+	// reporter.
+	LongJobs LongJobs `koanf:"longRunningJobs"`
 }
 
 // New creates a configuration using the provided arguments and config file.
@@ -49,6 +52,9 @@ func New(args ...string) (*C, error) {
 		"rabbitmq.management.url":      "",
 		"rabbitmq.management.username": "",
 		"rabbitmq.management.password": "",
+		"longRunningJobs.enable":       false,
+		"longRunningJobs.namespace":    "ALL",
+		"longRunningJobs.olderThan":    time.Hour * 12,
 	}, "."), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load default configuration: %w", err)
