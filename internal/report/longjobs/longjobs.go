@@ -109,6 +109,7 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 		partial.Navbar(false, false),
 		tmpl.Report(tmpl.Data{
 			Timestamp: now,
+			OlderThan: r.conf.OlderThan,
 			Jobs:      longJobs,
 		}),
 	)

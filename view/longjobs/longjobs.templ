@@ -7,6 +7,7 @@ import (
 
 type Data struct {
 	Timestamp time.Time
+	OlderThan time.Duration
 	Jobs      []Job
 }
 
@@ -21,7 +22,7 @@ type Job struct {
 
 templ Report(data Data) {
 	@heading(data.Timestamp)
-	@jobs(data.Jobs)
+	@jobs(data.Jobs, data.OlderThan)
 }
 
 templ heading(stamp time.Time) {
@@ -30,9 +31,11 @@ templ heading(stamp time.Time) {
 	</h1>
 }
 
-templ jobs(jobs []Job) {
+templ jobs(jobs []Job, olderThan time.Duration) {
 	<section class="px-3 lg:px-5 mb-5">
-		<h2 class="text-xl font-bold mb-2">Jobs</h2>
+		<p class="font-mono mb-2">
+			* Following jobs are older than { olderThan.String() }
+		</p>
 		<table class="full-width-table">
 			<thead>
 				<th>Name</th>
