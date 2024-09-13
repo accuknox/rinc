@@ -94,6 +94,25 @@ func (j Job) GenerateAll(ctx context.Context) error {
 		)
 	}
 
+	if j.conf.ImageTag.Enable {
+		err := j.GenerateImageTagReport(ctx, now)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"generating image tag report",
+				slog.String("error", err.Error()),
+			)
+			return fmt.Errorf("generating image tag report: %w", err)
+		}
+		slog.LogAttrs(
+			ctx,
+			slog.LevelInfo,
+			"generated imagetag.html",
+			slog.String("stamp", stamp),
+		)
+	}
+
 	return nil
 }
 
@@ -126,6 +145,14 @@ func (j Job) GenerateIndex(ctx context.Context, now time.Time) error {
 		statuses = append(statuses, view.IndexStatus{
 			Name: "Long Running Jobs",
 			Slug: "longrunningjobs",
+			ID:   stamp,
+		})
+	}
+
+	if j.conf.ImageTag.Enable {
+		statuses = append(statuses, view.IndexStatus{
+			Name: "Image Tag",
+			Slug: "imagetag",
 			ID:   stamp,
 		})
 	}

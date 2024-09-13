@@ -54,8 +54,7 @@ func (s Srv) Run(ctx context.Context) {
 	s.router.POST("/history/search", s.HistorySearch)
 	s.router.GET("/", s.Index)
 	s.router.GET("/:id", s.Index)
-	s.router.GET("/:id/rabbitmq", s.RabbitMQ)
-	s.router.GET("/:id/longrunningjobs", s.LongRunningJobs)
+	s.router.GET("/:id/:template", s.Report)
 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()

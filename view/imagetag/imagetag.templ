@@ -1,0 +1,55 @@
+package imagetag
+
+import "time"
+
+type Data struct {
+	Timestamp    time.Time
+	Deployments  []Resource
+	Statefulsets []Resource
+}
+
+type Resource struct {
+	Name      string
+	Namespace string
+	Images    []string
+}
+
+templ Report(data Data) {
+	@heading(data.Timestamp)
+	@resource("Deployments", data.Deployments)
+	@resource("StatefulSets", data.Statefulsets)
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		Image Tags ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+}
+
+templ resource(name string, resources []Resource) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">{ name }</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Name</th>
+				<th>Namespace</th>
+				<th>Image(s)</th>
+			</thead>
+			<tbody>
+				for _, r := range resources {
+					<tr>
+						<td>{ r.Name }</td>
+						<td>{ r.Namespace }</td>
+						<td>
+							<ul>
+								for _, image := range r.Images {
+									<li>{ image }</li>
+								}
+							</ul>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}

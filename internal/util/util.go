@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -40,4 +41,16 @@ func NewLogger(c conf.Log) *slog.Logger {
 		return slog.New(slog.NewJSONHandler(os.Stderr, opt))
 	}
 	return slog.New(slog.NewTextHandler(os.Stderr, opt))
+}
+
+// FileExists checks whether a file exists at the specified path.
+func FileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+		return false, fmt.Errorf("getting file %q info: %w", path, err)
+	}
+	return true, nil
 }
