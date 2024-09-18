@@ -14,4 +14,7 @@ type LongJobs struct {
 	// OlderThan defines the duration threshold; jobs older than this
 	// value will be reported.
 	OlderThan time.Duration `koanf:"olderThan"`
+	// IncludeSuspended specifies whether long-running suspended jobs should be
+	// included in the report.
+	IncludeSuspended bool `koanf:"includeSuspended"`
 }

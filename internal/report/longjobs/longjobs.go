@@ -58,14 +58,17 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 			return fmt.Errorf("listing jobs in ns %q: %w", r.conf.Namespace, err)
 		}
 
-	Outer:
 		for _, job := range jobs.Items {
 			if isFinished(job.Status.Conditions) {
-				continue Outer
+				continue
+			}
+			isSuspended := isSuspended(job.Status.Conditions)
+			if isSuspended && !r.conf.IncludeSuspended {
+				continue
 			}
 			old := job.CreationTimestamp.Time.Before(threshold)
 			if !old {
-				continue Outer
+				continue
 			}
 			var readyPods int32
 			if job.Status.Ready != nil {
@@ -74,10 +77,11 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 			longJobs = append(longJobs, tmpl.Job{
 				Name:       job.GetName(),
 				Namespace:  job.GetNamespace(),
-				Suspended:  isSuspended(job.Status.Conditions),
+				Suspended:  isSuspended,
 				ActivePods: job.Status.Active,
 				FailedPods: job.Status.Failed,
 				ReadyPods:  readyPods,
+				Age:        time.Now().UTC().Sub(job.CreationTimestamp.UTC()),
 			})
 			slog.LogAttrs(
 				ctx,
@@ -85,7 +89,7 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 				"long running job found",
 				slog.String("name", job.GetName()),
 				slog.String("namespace", job.GetNamespace()),
-				slog.Bool("suspended", isSuspended(job.Status.Conditions)),
+				slog.Bool("suspended", isSuspended),
 				slog.Int("activePods", int(job.Status.Active)),
 				slog.Int("failedPods", int(job.Status.Failed)),
 				slog.Int("readyPods", int(readyPods)),

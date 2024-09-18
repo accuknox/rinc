@@ -28,6 +28,7 @@ type Job struct {
 	ActivePods int32
 	FailedPods int32
 	ReadyPods  int32
+	Age        time.Duration
 }
 
 func Report(data Data) templ.Component {
@@ -78,7 +79,7 @@ func heading(stamp time.Time) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(stamp.UTC().Format("2006-01-02 15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 30, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 31, Col: 64}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -115,13 +116,13 @@ func jobs(jobs []Job, olderThan time.Duration) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(olderThan.String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 37, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 38, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><table class=\"full-width-table\"><thead><th>Name</th><th>Namespace</th><th>Suspended</th><th>Active Pods</th><th>Failed Pods</th><th>Ready Pods</th></thead> <tbody>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><table class=\"full-width-table\"><thead><th>Name</th><th>Namespace</th><th>Suspended</th><th>Active Pods</th><th>Failed Pods</th><th>Ready Pods</th><th>Age</th></thead> <tbody>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -133,7 +134,7 @@ func jobs(jobs []Job, olderThan time.Duration) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(job.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 51, Col: 20}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 53, Col: 20}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -146,7 +147,7 @@ func jobs(jobs []Job, olderThan time.Duration) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(job.Namespace)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 52, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 54, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -159,7 +160,7 @@ func jobs(jobs []Job, olderThan time.Duration) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%v", job.Suspended))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 53, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 55, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -172,7 +173,7 @@ func jobs(jobs []Job, olderThan time.Duration) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", job.ActivePods))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 54, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 56, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -185,7 +186,7 @@ func jobs(jobs []Job, olderThan time.Duration) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", job.FailedPods))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 55, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 57, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -198,9 +199,22 @@ func jobs(jobs []Job, olderThan time.Duration) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", job.ReadyPods))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 56, Col: 44}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 58, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(job.Age.Round(time.Second).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/longjobs/longjobs.templ`, Line: 59, Col: 47}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
