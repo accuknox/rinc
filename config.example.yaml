@@ -46,6 +46,8 @@ longRunningJobs:
   #
   # Eg: 12h, 30m, 5h30m15s
   olderThan: 24h
+  # include long-running suspended jobs in reports
+  includeSuspended: false
 imageTag:
   # enable image tag report
   enable: false

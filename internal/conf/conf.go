@@ -44,20 +44,21 @@ func New(args ...string) (*C, error) {
 	k := koanf.New(".")
 
 	err := k.Load(confmap.Provider(map[string]any{
-		"log.level":                    "info",
-		"log.format":                   "text",
-		"output":                       "reports",
-		"terminationGracePeriod":       time.Second * 10,
-		"kubernetesClient.inCluster":   false,
-		"kubernetesClient.kubeconfig":  "",
-		"rabbitmq.enable":              false,
-		"rabbitmq.headlessSvcAddr":     "",
-		"rabbitmq.management.url":      "",
-		"rabbitmq.management.username": "",
-		"rabbitmq.management.password": "",
-		"longRunningJobs.enable":       false,
-		"longRunningJobs.namespace":    "ALL",
-		"longRunningJobs.olderThan":    time.Hour * 12,
+		"log.level":                        "info",
+		"log.format":                       "text",
+		"output":                           "reports",
+		"terminationGracePeriod":           time.Second * 10,
+		"kubernetesClient.inCluster":       false,
+		"kubernetesClient.kubeconfig":      "",
+		"rabbitmq.enable":                  false,
+		"rabbitmq.headlessSvcAddr":         "",
+		"rabbitmq.management.url":          "",
+		"rabbitmq.management.username":     "",
+		"rabbitmq.management.password":     "",
+		"longRunningJobs.enable":           false,
+		"longRunningJobs.namespace":        "ALL",
+		"longRunningJobs.olderThan":        time.Hour * 12,
+		"longRunningJobs.includeSuspended": false,
 	}, "."), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load default configuration: %w", err)
