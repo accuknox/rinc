@@ -37,6 +37,9 @@ type C struct {
 	// ImageTag contains configuration related to the image tag
 	// reporter.
 	ImageTag ImageTag `koanf:"imageTag"`
+	// DaSS contains configuration related to the deployment and statefulset
+	// status reporter.
+	DaSS DaSS `koanf:"deploymentAndStatefulsetStatus"`
 }
 
 // New creates a configuration using the provided arguments and config file.
@@ -44,21 +47,11 @@ func New(args ...string) (*C, error) {
 	k := koanf.New(".")
 
 	err := k.Load(confmap.Provider(map[string]any{
-		"log.level":                        "info",
-		"log.format":                       "text",
-		"output":                           "reports",
-		"terminationGracePeriod":           time.Second * 10,
-		"kubernetesClient.inCluster":       false,
-		"kubernetesClient.kubeconfig":      "",
-		"rabbitmq.enable":                  false,
-		"rabbitmq.headlessSvcAddr":         "",
-		"rabbitmq.management.url":          "",
-		"rabbitmq.management.username":     "",
-		"rabbitmq.management.password":     "",
-		"longRunningJobs.enable":           false,
-		"longRunningJobs.namespace":        "ALL",
-		"longRunningJobs.olderThan":        time.Hour * 12,
-		"longRunningJobs.includeSuspended": false,
+		"log.level":                 "info",
+		"log.format":                "text",
+		"output":                    "reports",
+		"terminationGracePeriod":    time.Second * 10,
+		"longRunningJobs.olderThan": time.Hour * 12,
 	}, "."), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load default configuration: %w", err)

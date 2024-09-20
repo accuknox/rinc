@@ -53,3 +53,9 @@ imageTag:
   enable: false
   # kubernetes namespace that the image tag reporter will be limited to.
   namespace: ""
+deploymentAndStatefulsetStatus:
+  # enable deployment and statefulset status (DaSS) reporter
+  enable: false
+  # kubernetes namespace that the deployment and statefulset status (DaSS)
+  # reporter will be limited to. Leave blank for all namespaces.
+  namespace: ""
