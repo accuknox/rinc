@@ -113,6 +113,25 @@ func (j Job) GenerateAll(ctx context.Context) error {
 		)
 	}
 
+	if j.conf.DaSS.Enable {
+		err := j.GenerateDaSSReport(ctx, now)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"generating DaSS report",
+				slog.String("error", err.Error()),
+			)
+			return fmt.Errorf("generating DaSS report: %w", err)
+		}
+		slog.LogAttrs(
+			ctx,
+			slog.LevelInfo,
+			"generated deployment-statefulset-status.html",
+			slog.String("stamp", stamp),
+		)
+	}
+
 	return nil
 }
 
@@ -153,6 +172,14 @@ func (j Job) GenerateIndex(ctx context.Context, now time.Time) error {
 		statuses = append(statuses, view.IndexStatus{
 			Name: "Image Tag",
 			Slug: "imagetag",
+			ID:   stamp,
+		})
+	}
+
+	if j.conf.DaSS.Enable {
+		statuses = append(statuses, view.IndexStatus{
+			Name: "Deployment & Statefulset Status",
+			Slug: "deployment-statefulset-status",
 			ID:   stamp,
 		})
 	}

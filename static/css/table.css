@@ -27,3 +27,19 @@ th {
 .full-width-table {
   width: 100%;
 }
+
+.success {
+  background-color: #90ee90;
+}
+
+.error {
+  background-color: #ffa2ad;
+}
+
+.warning {
+  background-color: #fff36d;
+}
+
+.whitespace-wrap {
+  white-space: wrap;
+}
