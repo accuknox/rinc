@@ -19,6 +19,9 @@ func (c C) Validate() error {
 	if err := validateRabbitMQ(c.RabbitMQ); err != nil {
 		return fmt.Errorf("rabbitmq: %w", err)
 	}
+	if err := validateCeph(c.Ceph); err != nil {
+		return fmt.Errorf("ceph: %w", err)
+	}
 	return nil
 }
 
@@ -70,6 +73,22 @@ func validateRabbitMQ(rmq RabbitMQ) error {
 	_, err := net.LookupIP(rmq.HeadlessSvcAddr)
 	if err != nil {
 		return fmt.Errorf("failed to resolve %q: %w", rmq.HeadlessSvcAddr, err)
+	}
+	return nil
+}
+
+func validateCeph(c Ceph) error {
+	if !c.Enable {
+		return nil
+	}
+	if c.DashboardAPI.URL == "" {
+		return fmt.Errorf("missing `ceph.dashboardAPI.url`")
+	}
+	if c.DashboardAPI.Username == "" {
+		return fmt.Errorf("missing `ceph.dashboardAPI.username`")
+	}
+	if c.DashboardAPI.Password == "" {
+		return fmt.Errorf("missing `ceph.dashboardAPI.password`")
 	}
 	return nil
 }

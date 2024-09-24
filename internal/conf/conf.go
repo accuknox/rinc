@@ -37,6 +37,8 @@ type C struct {
 	// ImageTag contains configuration related to the image tag
 	// reporter.
 	ImageTag ImageTag `koanf:"imageTag"`
+	// Ceph contains configuration related to the ceph status reporter.
+	Ceph Ceph `koanf:"ceph"`
 }
 
 // New creates a configuration using the provided arguments and config file.

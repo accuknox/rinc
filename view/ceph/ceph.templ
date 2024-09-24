@@ -1,0 +1,253 @@
+package rabbitmq
+
+import (
+	"fmt"
+	"time"
+	"strings"
+
+	"github.com/accuknox/rinc/view/icon"
+	types "github.com/accuknox/rinc/types/ceph"
+)
+
+const (
+	HealthOK   = "HEALTH_OK"
+	HealthWarn = "HEALTH_WARN"
+	HealthErr  = "HEALTH_ERR"
+	HealthCrit = "HEALTH_CRIT"
+)
+
+type Data struct {
+	Timestamp time.Time
+	Status    types.Status
+}
+
+templ Report(data Data) {
+	@heading(data.Timestamp, data.Status.Health.Status)
+	@health(data.Status.Health)
+	@stats(data.Status)
+}
+
+templ indicator(status string, size ...int) {
+	if status == HealthOK {
+		<span class="text-green-700 inline">
+			@icon.Check(size...)
+		</span>
+	} else if status == HealthErr || status == HealthCrit {
+		<span class="text-red-700 inline">
+			@icon.Cross(size...)
+		</span>
+	} else if status == HealthWarn {
+		<span class="text-yellow-700 inline">
+			@icon.Warn(size...)
+		</span>
+	}
+}
+
+templ heading(stamp time.Time, health string) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		@indicator(health)
+		CEPH ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+}
+
+templ health(data types.Health) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Health</h2>
+		<table>
+			<tbody>
+				<tr>
+					<th>Status</th>
+					<td class="flex items-center gap-2">
+						@indicator(data.Status, 18)
+						{ data.Status }
+					</td>
+				</tr>
+				<tr>
+					<th>Checks</th>
+					<td>
+						<table class="full-width-table nested-table">
+							<thead>
+								<th>Severity</th>
+								<th>Detail</th>
+							</thead>
+							<tbody>
+								for _, check := range data.Checks {
+									<tr>
+										<td class="flex items-center gap-2">
+											@indicator(check.Severity, 18)
+											{ check.Severity }
+										</td>
+										<td>
+											<ul>
+												for _, detail := range check.Detail {
+													<li>{ detail.Message }</li>
+												}
+											</ul>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+}
+
+templ stats(data types.Status) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Stats</h2>
+		<table>
+			<tbody>
+				<tr>
+					<th>Storage Used</th>
+					if usedPercent(data.DF.Stats) > 90 {
+						<td class="error">
+							{ fmt.Sprintf(
+								"%.2f GiB / %.2f GiB (%.2f)%%",
+								usedStorage(data.DF.Stats),
+								totalStorage(data.DF.Stats),
+								usedPercent(data.DF.Stats),
+							) }
+						</td>
+					} else if usedPercent(data.DF.Stats) > 70 {
+						<td class="warning">
+							{ fmt.Sprintf(
+								"%.2f GiB / %.2f GiB (%.2f)%%",
+								usedStorage(data.DF.Stats),
+								totalStorage(data.DF.Stats),
+								usedPercent(data.DF.Stats),
+							) }
+						</td>
+					} else {
+						<td>
+							{ fmt.Sprintf(
+								"%.2f GiB / %.2f GiB (%.2f)%%",
+								usedStorage(data.DF.Stats),
+								totalStorage(data.DF.Stats),
+								usedPercent(data.DF.Stats),
+							) }
+						</td>
+					}
+				</tr>
+				<tr>
+					<th>Hosts</th>
+					<td>{ fmt.Sprintf("%d", data.Hosts) }</td>
+				</tr>
+				<tr>
+					<th>MGR</th>
+					<td>
+						{ fmt.Sprintf(
+							"Active %q, StandBys: %s",
+							data.MGRMap.ActiveName,
+							mgrStandBys(data.MGRMap),
+						) }
+					</td>
+				</tr>
+				<tr>
+					<th>MON</th>
+					<td>
+						{ fmt.Sprintf("Quorum %s", monQuorum(data.MonStatus.MonMap.Mon)) }
+					</td>
+				</tr>
+				<tr>
+					<th>OSDs</th>
+					<td>
+						{ fmt.Sprintf(
+							"%d OSDs: %d Up, %d In",
+							len(data.OSDMap.OSDs),
+							osdsUp(data.OSDMap.OSDs),
+							osdsIn(data.OSDMap.OSDs),
+						) }
+					</td>
+				</tr>
+				<tr>
+					<th>Pools</th>
+					<td>
+						{ fmt.Sprintf("%d pools, %d pgs", len(data.Pools), pgCount(data.Pools)) }
+					</td>
+				</tr>
+				<tr>
+					<th>PGs</th>
+					<td>
+						<ul>
+							for status, count := range data.PGInfo.Statuses {
+								<li>
+									{ fmt.Sprintf("%d %s", count, status) }
+								</li>
+							}
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<th>PGs Per OSD</th>
+					<td>{ fmt.Sprintf("%.2f", data.PGInfo.PGsPerOSD) }</td>
+				</tr>
+				<tr>
+					<th>Client IO</th>
+					<td>
+						{ fmt.Sprintf(
+							"%.2f KiB/s rd, %.2f KiB/s wr, %d op/s rd, %d op/s wr",
+							float64(data.ClientPerf.ReadBytesPerSec) / 1024,
+							float64(data.ClientPerf.WriteBytesPerSec) / 1024,
+							data.ClientPerf.ReadOpPerSec,
+							data.ClientPerf.WriteOpPerSec,
+						) }
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+}
+
+func osdsUp(osds []types.OSD) uint {
+	var count uint
+	for _, osd := range osds {
+		count += osd.Up
+	}
+	return count
+}
+
+func osdsIn(osds []types.OSD) uint {
+	var count uint
+	for _, osd := range osds {
+		count += osd.In
+	}
+	return count
+}
+
+func pgCount(pools []types.Pool) uint {
+	var count uint
+	for _, p := range pools {
+		count += p.PGNum
+	}
+	return count
+}
+
+func monQuorum(mons []types.Mon) string {
+	var str string
+	for _, m := range mons {
+		str += fmt.Sprintf("%s, ", m.Name)
+	}
+	return strings.TrimSuffix(str, ", ")
+}
+
+func mgrStandBys(mgr types.MGRMap) string {
+	if len(mgr.StandBys) == 0 {
+		return "NONE"
+	}
+	return strings.Join(mgr.StandBys, ", ")
+}
+
+func usedStorage(df types.DFStats) float64 {
+	return float64(df.TotalUsedBytes) * 9.313226e-10
+}
+
+func totalStorage(df types.DFStats) float64 {
+	return float64(df.TotalBytes) * 9.313226e-10
+}
+
+func usedPercent(df types.DFStats) float64 {
+	return float64(df.TotalUsedBytes) / float64(df.TotalBytes) * 100
+}
