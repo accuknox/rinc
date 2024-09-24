@@ -17,14 +17,20 @@ const (
 )
 
 type Data struct {
-	Timestamp time.Time
-	Status    types.Status
+	Timestamp   time.Time
+	Status      types.Status
+	Hosts       []types.Host
+	Devices     []types.Device
+	Inventories []types.Inventory
 }
 
 templ Report(data Data) {
 	@heading(data.Timestamp, data.Status.Health.Status)
 	@health(data.Status.Health)
 	@stats(data.Status)
+	@hosts(data.Hosts)
+	@inventory(data.Inventories)
+	@devices(data.Devices)
 }
 
 templ indicator(status string, size ...int) {
@@ -105,7 +111,7 @@ templ stats(data types.Status) {
 					if usedPercent(data.DF.Stats) > 90 {
 						<td class="error">
 							{ fmt.Sprintf(
-								"%.2f GiB / %.2f GiB (%.2f)%%",
+								"%s / %s (%.2f)%%",
 								usedStorage(data.DF.Stats),
 								totalStorage(data.DF.Stats),
 								usedPercent(data.DF.Stats),
@@ -114,7 +120,7 @@ templ stats(data types.Status) {
 					} else if usedPercent(data.DF.Stats) > 70 {
 						<td class="warning">
 							{ fmt.Sprintf(
-								"%.2f GiB / %.2f GiB (%.2f)%%",
+								"%s / %s (%.2f)%%",
 								usedStorage(data.DF.Stats),
 								totalStorage(data.DF.Stats),
 								usedPercent(data.DF.Stats),
@@ -123,7 +129,7 @@ templ stats(data types.Status) {
 					} else {
 						<td>
 							{ fmt.Sprintf(
-								"%.2f GiB / %.2f GiB (%.2f)%%",
+								"%s / %s (%.2f)%%",
 								usedStorage(data.DF.Stats),
 								totalStorage(data.DF.Stats),
 								usedPercent(data.DF.Stats),
@@ -188,14 +194,133 @@ templ stats(data types.Status) {
 					<th>Client IO</th>
 					<td>
 						{ fmt.Sprintf(
-							"%.2f KiB/s rd, %.2f KiB/s wr, %d op/s rd, %d op/s wr",
-							float64(data.ClientPerf.ReadBytesPerSec) / 1024,
-							float64(data.ClientPerf.WriteBytesPerSec) / 1024,
+							"%s/s rd, %s/s wr, %d op/s rd, %d op/s wr",
+							toHumanReadable(data.ClientPerf.ReadBytesPerSec),
+							toHumanReadable(data.ClientPerf.WriteBytesPerSec),
 							data.ClientPerf.ReadOpPerSec,
 							data.ClientPerf.WriteOpPerSec,
 						) }
 					</td>
 				</tr>
+			</tbody>
+		</table>
+	</section>
+}
+
+templ hosts(data []types.Host) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Hosts</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Name</th>
+				<th>Addr</th>
+				<th>Status</th>
+				<th>Labels</th>
+			</thead>
+			<tbody>
+				for _, host := range data {
+					<tr>
+						<td>{ host.Hostname }</td>
+						<td>{ host.Addr }</td>
+						if host.Status == "" {
+							<td class="success">Online</td>
+						} else if host.Status == "offline" {
+							<td class="error">Online</td>
+						} else if host.Status == "maintenance" {
+							<td class="warning">Maintenance</td>
+						} else {
+							<td>{ host.Status }</td>
+						}
+						<td>
+							<ul>
+								for _, label := range host.Labels {
+									<li>{ label }</li>
+								}
+							</ul>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}
+
+templ inventory(data []types.Inventory) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Inventory</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Hostname</th>
+				<th>Type</th>
+				<th>Path</th>
+				<th>Size</th>
+				<th>Available</th>
+				<th>Rejected Reasons</th>
+			</thead>
+			<tbody>
+				for _, i := range data {
+					for _, disk := range i.PhysicalDisks {
+						<tr>
+							<td>{ i.Hostname }</td>
+							<td>{ disk.Type }</td>
+							<td>{ disk.Path }</td>
+							<td>
+								if disk.Stats.Size != 0 {
+									{ toHumanReadable(disk.Stats.Size) }
+								}
+							</td>
+							if disk.Available {
+								<td class="success">{ fmt.Sprintf("%v", disk.Available) }</td>
+							} else {
+								<td class="error">{ fmt.Sprintf("%v", disk.Available) }</td>
+							}
+							<td>
+								<ul>
+									for _, reason := range disk.RejectedReasons {
+										<li>{ reason }</li>
+									}
+								</ul>
+							</td>
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</section>
+}
+
+templ devices(data []types.Device) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Devices</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>ID</th>
+				<th>Location</th>
+			</thead>
+			<tbody>
+				for _, dev := range data {
+					<tr>
+						<td>{ dev.ID }</td>
+						<td>
+							<table class="full-width-table nested-table">
+								<thead>
+									<th>Host</th>
+									<th>Dev</th>
+									<th>Path</th>
+								</thead>
+								<tbody>
+									for _, l := range dev.Location {
+										<tr>
+											<td>{ l.Host }</td>
+											<td>{ l.Dev }</td>
+											<td>{ l.Path }</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				}
 			</tbody>
 		</table>
 	</section>
@@ -240,14 +365,30 @@ func mgrStandBys(mgr types.MGRMap) string {
 	return strings.Join(mgr.StandBys, ", ")
 }
 
-func usedStorage(df types.DFStats) float64 {
-	return float64(df.TotalUsedBytes) * 9.313226e-10
+func usedStorage(df types.DFStats) string {
+	return toHumanReadable(df.TotalUsedBytes)
 }
 
-func totalStorage(df types.DFStats) float64 {
-	return float64(df.TotalBytes) * 9.313226e-10
+func totalStorage(df types.DFStats) string {
+	return toHumanReadable(df.TotalBytes)
 }
 
 func usedPercent(df types.DFStats) float64 {
 	return float64(df.TotalUsedBytes) / float64(df.TotalBytes) * 100
+}
+
+func toHumanReadable[T uint64 | float64](byts T) string {
+	u := float64(byts) * 9.313226e-10
+	if int(u) != 0 {
+		return fmt.Sprintf("%.2f GiB", u)
+	}
+	u = float64(byts) * 9.536743e-7
+	if int(u) != 0 {
+		return fmt.Sprintf("%.2f MiB", u)
+	}
+	u = float64(byts) / 1024
+	if int(u) != 0 {
+		return fmt.Sprintf("%.2f KiB", u)
+	}
+	return fmt.Sprintf("%d B", uint64(byts))
 }

@@ -12,22 +12,31 @@ import (
 const (
 	healthEndpoint        = "/api/health/full"
 	hostListEndpoint      = "/api/host"
-	hostInventoryEndpoint = "/api/host/%s/inventory"
+	hostInventoryEndpoint = "/ui-api/host/inventory"
+	hostDevicesEndpoint   = "/api/host/%s/devices"
 	authToken             = "/api/auth"
 	authLogout            = "/api/auth/logout"
 )
 
 const (
-	mediaTypeV1 = "application/vnd.ceph.api.v1.0+json"
+	mediaTypeV10 = "application/vnd.ceph.api.v1.0+json"
+	mediaTypeV13 = "application/vnd.ceph.api.v1.3+json"
 )
 
-func (r Reporter) call(ctx context.Context, endp, mediaTyp string, v any) error {
+func (r Reporter) call(ctx context.Context, endp, mediaTyp string, v any, q ...url.Values) error {
 	endp, err := url.JoinPath(r.conf.DashboardAPI.URL, endp)
 	if err != nil {
 		return fmt.Errorf("joining url path: %w", err)
 	}
+	u, err := url.Parse(endp)
+	if err != nil {
+		return fmt.Errorf("parsing url %q: %w", endp, err)
+	}
+	if len(q) != 0 {
+		u.RawQuery = q[0].Encode()
+	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endp, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return fmt.Errorf("creating new http request: %w", err)
 	}

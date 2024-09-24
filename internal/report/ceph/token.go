@@ -35,7 +35,7 @@ func (r *Reporter) fetchTkn(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("creating new http request: %w", err)
 	}
-	req.Header.Set("accept", mediaTypeV1)
+	req.Header.Set("accept", mediaTypeV10)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{
