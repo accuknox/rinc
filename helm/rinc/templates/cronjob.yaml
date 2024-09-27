@@ -33,7 +33,9 @@ spec:
           affinity:
             {{- toYaml .Values.reportingCronJob.affinity | nindent 12 }}
           tolerations:
-            {{- toYaml .Values.reportingCronJob.tolerations | nindent 12 }}
+            {{- with .Values.reportingCronJob.tolerations }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           serviceAccountName: {{ include "serviceAccount.name" . }}
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:

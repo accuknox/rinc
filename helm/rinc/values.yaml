@@ -54,7 +54,7 @@ web:
       #   hosts:
       #     - rinc.example.com
   affinity: {}
-  tolerations: {}
+  tolerations: []
   resources: {}
     # limits:
     #   cpu: 100m
@@ -83,7 +83,7 @@ reportingCronJob:
     #   cpu: 100m
     #   memory: 128Mi
   affinity: {}
-  tolerations: {}
+  tolerations: []
   additionalLabels: {}
   additionalVolumes: []
   additionalVolumeMounts: []

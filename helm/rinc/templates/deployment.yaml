@@ -25,7 +25,9 @@ spec:
       affinity:
         {{- toYaml .Values.web.affinity | nindent 8 }}
       tolerations:
-        {{- toYaml .Values.web.tolerations | nindent 8 }}
+        {{- with .Values.web.tolerations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
       automountServiceAccountToken: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
