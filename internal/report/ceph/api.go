@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	summaryEndpoint       = "/api/summary"
 	healthEndpoint        = "/api/health/full"
 	hostListEndpoint      = "/api/host"
 	hostInventoryEndpoint = "/ui-api/host/inventory"

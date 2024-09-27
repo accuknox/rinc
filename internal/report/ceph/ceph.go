@@ -37,8 +37,20 @@ func NewReporter(c conf.Ceph, kubeClient *kubernetes.Clientset) Reporter {
 // Report satisfies the report.Reporter interface by writing the CEPH status
 // and fetched metrics to the provided io.Writer.
 func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error {
+	summary := new(types.Summary)
+	err := r.call(ctx, summaryEndpoint, mediaTypeV10, summary)
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"fetching ceph summary",
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("fetching ceph summary: %w", err)
+	}
+
 	status := new(types.Status)
-	err := r.call(ctx, healthEndpoint, mediaTypeV10, status)
+	err = r.call(ctx, healthEndpoint, mediaTypeV10, status)
 	if err != nil {
 		slog.LogAttrs(
 			ctx,
@@ -108,6 +120,7 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 		partial.Navbar(false, false),
 		tmpl.Report(tmpl.Data{
 			Timestamp:   now,
+			Version:     summary.Version,
 			Status:      *status,
 			Hosts:       hosts,
 			Devices:     devices,
