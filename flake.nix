@@ -30,6 +30,7 @@
             kubectl
             kind
             kubernetes-helm
+            awscli2
           ];
         };
       });

@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "configMap.name" . }}
+  namespace: {{ include "namespace" . }}
+data:
+  {{ $_ := unset .Values.config "configMap" -}}
+  config.yaml: |-
+    terminationGracePeriod: 0
+    kubernetesClient:
+      inCluster: true
+    {{- toYaml .Values.config | nindent 4 }}

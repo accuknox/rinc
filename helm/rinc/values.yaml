@@ -1,0 +1,141 @@
+---
+image:
+  repository: 956994857092.dkr.ecr.us-east-2.amazonaws.com/accuknox-rinc
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+  runAsGroup: 1000
+  runAsUser: 1000
+  fsGroup: 1000
+  runAsNonRoot: true
+
+securityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+
+persistentVolumeClaim:
+  nameOverride: ""
+  fullnameOverride: ""
+  spec:
+    # storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 5Gi
+
+web:
+  nameOverride: ""
+  fullnameOverride: ""
+  replicaCount: 1
+  restartPolicy: "Always"
+  service:
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: rinc.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+      # - secretName: chart-rinc-tls
+      #   hosts:
+      #     - rinc.example.com
+  affinity: {}
+  tolerations: {}
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  additionalLabels: {}
+  additionalVolumes: []
+  additionalVolumeMounts: []
+
+reportingCronJob:
+  nameOverride: ""
+  fullnameOverride: ""
+  failedJobHistoryLimit: 3
+  successfulJobHistoryLimit: 3
+  schedule: "0 */8 * * *"
+  # ttlSecondsAfterFinished:
+  # backoffLimit:
+  restartPolicy: "Never"
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  affinity: {}
+  tolerations: {}
+  additionalLabels: {}
+  additionalVolumes: []
+  additionalVolumeMounts: []
+
+rbac:
+  serviceAccount:
+    nameOverride: ""
+    fullnameOverride: ""
+  clusterRoleBinding:
+    nameOverride: ""
+    fullnameOverride: ""
+
+config:
+  configMap:
+    nameOverride: ""
+    fullnameOverride: ""
+  log:
+    level: "info"  # possible values: "debug", "info", "warn", "error"
+    format: "text" # possible values: "text", "json"
+  # path to the reports output directory
+  output: "/data/reports"
+  rabbitmq:
+    # enable rabbitmq metrics and stats in the reports.
+    enable: false
+    # kubernetes headless fqdn address pointing to rabbitmq nodes. On a DNS
+    # lookup, this address must resolve to rabbitmq node ips.
+    #
+    # For example: rabbitmq-nodes.default.svc.cluster.local
+    headlessSvcAddr: ""
+    management:
+      # rabbitmq management url.
+      #
+      # For example: http://rabbitmq.default.svc.cluster.local:15672
+      url: ""
+      # basic auth username for the management api.
+      username: ""
+      # basic auth password for the management api.
+      password: ""
+  longRunningJobs:
+    # enable long-running jobs reporting
+    enable: false
+    # namespace in which the long-running jobs will be reported. Leave blank for
+    # all namespaces.
+    namespace: ""
+    # jobs older than this value will be reported.
+    #
+    # Eg: 12h, 30m, 5h30m15s
+    olderThan: 24h
+    # include long-running suspended jobs in reports
+    includeSuspended: false
+  imageTag:
+    # enable image tag report
+    enable: false
+    # kubernetes namespace that the image tag reporter will be limited to.
+    namespace: ""

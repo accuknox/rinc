@@ -1,0 +1,76 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "cronjob.name" . }}
+  namespace: {{ include "namespace" . }}
+  labels:
+    {{- include "cronjob.labels" . | nindent 4 }}
+    {{- with .Values.reportingCronJob.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: {{ .Values.reportingCronJob.failedJobHistoryLimit | default 3 }}
+  successfulJobsHistoryLimit: {{ .Values.reportingCronJob.successfulJobHistoryLimit | default 3 }}
+  schedule: "{{ .Values.reportingCronJob.schedule }}"
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "cronjob.labels" . | nindent 8 }}
+        {{- with .Values.reportingCronJob.additionalLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.reportingCronJob.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ .Values.reportingCronJob.ttlSecondsAfterFinished }}
+      {{- end }}
+      {{- if .Values.reportingCronJob.backoffLimit }}
+      backoffLimit: {{ .Values.reportingCronJob.backoffLimit }}
+      {{- end }}
+      template:
+        spec:
+          affinity:
+            {{- toYaml .Values.reportingCronJob.affinity | nindent 12 }}
+          tolerations:
+            {{- toYaml .Values.reportingCronJob.tolerations | nindent 12 }}
+          serviceAccountName: {{ include "serviceAccount.name" . }}
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: {{ .Chart.Name }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              args: [ "--generate-reports" ]
+              resources:
+                {{- toYaml .Values.reportingCronJob.resources | nindent 16 }}
+              volumeMounts:
+                - name: {{ include "configMap.name" . }}
+                  readOnly: true
+                  mountPath: /etc/rinc/config.yaml
+                  subPath: config.yaml
+                - name: {{ include "pvc.name" . }}
+                  readOnly: false
+                  mountPath: {{ .Values.config.output }}
+              {{- with .Values.web.additionalVolumeMounts }}
+                {{- toYaml . | nindent 12 }}
+              {{- end }}
+          volumes:
+            - name: {{ include "configMap.name" . }}
+              configMap:
+                name: {{ include "configMap.name" . }}
+                optional: false
+            - name: {{ include "pvc.name" . }}
+              persistentVolumeClaim:
+                claimName: {{ include "pvc.name" . }}
+                readOnly: false
+          {{- with .Values.reportingCronJob.additionalVolumes }}
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          restartPolicy: {{ .Values.reportingCronJob.restartPolicy | default "Never" }}

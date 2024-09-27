@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "deployment.name" . }}
+  namespace: {{ include "namespace" . }}
+  labels:
+    {{- include "deployment.labels" . | nindent 4 }}
+    {{- with .Values.web.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.web.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "deployment.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "deployment.selectorLabels" . | nindent 8 }}
+        {{- with .Values.web.additionalLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      affinity:
+        {{- toYaml .Values.web.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.web.tolerations | nindent 8 }}
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.web.resources | nindent 12 }}
+          volumeMounts:
+            - name: {{ include "configMap.name" . }}
+              readOnly: true
+              mountPath: /etc/rinc/config.yaml
+              subPath: config.yaml
+            - name: {{ include "pvc.name" . }}
+              readOnly: true
+              mountPath: {{ .Values.config.output }}
+          {{- with .Values.web.additionalVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: {{ include "configMap.name" . }}
+          configMap:
+            name: {{ include "configMap.name" . }}
+            optional: false
+        - name: {{ include "pvc.name" . }}
+          persistentVolumeClaim:
+            claimName: {{ include "pvc.name" . }}
+            readOnly: true
+      {{- with .Values.web.additionalVolumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: {{ .Values.web.restartPolicy | default "Always" }}
