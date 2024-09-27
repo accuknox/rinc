@@ -17,10 +17,12 @@ const (
 	hostDevicesEndpoint   = "/api/host/%s/devices"
 	authToken             = "/api/auth"
 	authLogout            = "/api/auth/logout"
+	bucketEndpoint        = "/api/rgw/bucket"
 )
 
 const (
 	mediaTypeV10 = "application/vnd.ceph.api.v1.0+json"
+	mediaTypeV11 = "application/vnd.ceph.api.v1.1+json"
 	mediaTypeV13 = "application/vnd.ceph.api.v1.3+json"
 )
 

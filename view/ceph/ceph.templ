@@ -23,15 +23,17 @@ type Data struct {
 	Hosts       []types.Host
 	Devices     []types.Device
 	Inventories []types.Inventory
+	Buckets     []types.Bucket
 }
 
 templ Report(data Data) {
 	@heading(data.Timestamp, data.Status.Health.Status)
 	@health(data.Status.Health)
-	@stats(data.Status, data.Version)
+	@stats(data.Status, data.Version, len(data.Buckets))
 	@hosts(data.Hosts)
 	@inventory(data.Inventories)
 	@devices(data.Devices)
+	@buckets(data.Buckets)
 }
 
 templ indicator(status string, size ...int) {
@@ -102,7 +104,7 @@ templ health(data types.Health) {
 	</section>
 }
 
-templ stats(data types.Status, version string) {
+templ stats(data types.Status, version string, numBuckets int) {
 	<section class="px-3 lg:px-5 mb-5">
 		<h2 class="text-xl font-bold mb-2">Stats</h2>
 		<table>
@@ -206,6 +208,10 @@ templ stats(data types.Status, version string) {
 							data.ClientPerf.WriteOpPerSec,
 						) }
 					</td>
+				</tr>
+				<tr>
+					<th>Buckets</th>
+					<td>{ fmt.Sprintf("%d", numBuckets) }</td>
 				</tr>
 			</tbody>
 		</table>
@@ -331,6 +337,34 @@ templ devices(data []types.Device) {
 	</section>
 }
 
+templ buckets(data []types.Bucket) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Buckets</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Name</th>
+				<th>Owner</th>
+				<th>Used Capacity</th>
+				<th>Capacity Limit</th>
+				<th>Objects</th>
+				<th>Object Limit</th>
+			</thead>
+			<tbody>
+				for _, b := range data {
+					<tr>
+						<td>{ b.Name }</td>
+						<td>{ b.Owner }</td>
+						<td>{ toHumanReadable(b.Usage.Main.SizeUtilized + b.Usage.Multimeta.SizeUtilized) }</td>
+						<td>{ bucketCapacityLimit(b.Quota) }</td>
+						<td>{ fmt.Sprintf("%d", b.Usage.Main.NumObjects + b.Usage.Multimeta.NumObjects) }</td>
+						<td>{ bucketObjectLimit(b.Quota) }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}
+
 func osdsUp(osds []types.OSD) uint {
 	var count uint
 	for _, osd := range osds {
@@ -382,7 +416,7 @@ func usedPercent(df types.DFStats) float64 {
 	return float64(df.TotalUsedBytes) / float64(df.TotalBytes) * 100
 }
 
-func toHumanReadable[T uint64 | float64](byts T) string {
+func toHumanReadable[T uint64 | int64 | float64](byts T) string {
 	u := float64(byts) * 9.313226e-10
 	if int(u) != 0 {
 		return fmt.Sprintf("%.2f GiB", u)
@@ -396,4 +430,24 @@ func toHumanReadable[T uint64 | float64](byts T) string {
 		return fmt.Sprintf("%.2f KiB", u)
 	}
 	return fmt.Sprintf("%d B", uint64(byts))
+}
+
+func bucketCapacityLimit(quota types.BucketQuota) string {
+	if !quota.Enabled {
+		return "No Limit"
+	}
+	if quota.MaxSize <= 0 {
+		return ""
+	}
+	return toHumanReadable(quota.MaxSize)
+}
+
+func bucketObjectLimit(quota types.BucketQuota) string {
+	if !quota.Enabled {
+		return "No Limit"
+	}
+	if quota.MaxObjects <= 0 {
+		return ""
+	}
+	return fmt.Sprintf("%d", quota.MaxObjects)
 }

@@ -114,6 +114,20 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 		return fmt.Errorf("fetching ceph host inventories: %w", err)
 	}
 
+	var buckets []types.Bucket
+	q := url.Values{}
+	q.Set("stats", "true")
+	err = r.call(ctx, bucketEndpoint, mediaTypeV11, &buckets, q)
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"fetching ceph RGW buckets",
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("fetching ceph RGW buckets: %w", err)
+	}
+
 	stamp := now.Format(util.IsosecLayout)
 	c := layout.Base(
 		fmt.Sprintf("CEPH - %s | AccuKnox Reports", stamp),
@@ -125,6 +139,7 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 			Hosts:       hosts,
 			Devices:     devices,
 			Inventories: inventories,
+			Buckets:     buckets,
 		}),
 	)
 	err = c.Render(ctx, to)
