@@ -73,6 +73,9 @@ func (s Srv) HistorySearch(c echo.Context) error {
 		if !entry.IsDir() {
 			continue
 		}
+		if !util.IsIsosec(entry.Name()) {
+			continue
+		}
 		if strings.HasPrefix(entry.Name(), params.Date) {
 			targets = append(targets, entry.Name())
 		}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/accuknox/rinc/internal/util"
 	"github.com/accuknox/rinc/view"
 	"github.com/accuknox/rinc/view/layout"
 
@@ -31,6 +32,9 @@ func (s Srv) Index(c echo.Context) error {
 		}
 		for _, entry := range entries {
 			if !entry.IsDir() {
+				continue
+			}
+			if !util.IsIsosec(entry.Name()) {
 				continue
 			}
 			if entry.Name() > id {

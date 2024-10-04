@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/accuknox/rinc/internal/conf"
@@ -53,4 +54,10 @@ func FileExists(path string) (bool, error) {
 		return false, fmt.Errorf("getting file %q info: %w", path, err)
 	}
 	return true, nil
+}
+
+// IsIsosec checks if the given string is an isosec identifier.
+func IsIsosec(s string) bool {
+	r := regexp.MustCompile("^[0-9]{14}$")
+	return r.MatchString(s)
 }

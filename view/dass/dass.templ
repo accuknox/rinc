@@ -1,0 +1,141 @@
+package dass
+
+import (
+	"fmt"
+	"time"
+)
+
+const (
+	kindDeployment  = "Deployment"
+	kindStatefulset = "StatefulSet"
+)
+
+type Data struct {
+	Timestamp    time.Time
+	Deployments  []Resource
+	Statefulsets []Resource
+}
+
+type Resource struct {
+	Name              string
+	Namespace         string
+	Age               time.Duration
+	DesiredReplicas   int32
+	ReadyReplicas     int32
+	AvailableReplicas int32
+	UpdatedReplicas   int32
+	Events            []Event
+	IsReplicaFailure  bool
+	IsAvailable       bool
+}
+
+type Event struct {
+	Type    string
+	Reason  string
+	Message string
+}
+
+templ Report(data Data) {
+	@heading(data.Timestamp)
+	@resource(kindDeployment, data.Deployments)
+	@resource(kindStatefulset, data.Statefulsets)
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		Deployment & Statefulset Status ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+	<section class="px-4 mb-5">
+		<ul>
+			<li class="flex items-center">
+				<div class="success w-4 h-4 mr-4"></div>
+				<div>
+					Available replicas are equal to the desired no. of replicas
+					<strong>OR</strong>
+					SUCCESS
+				</div>
+			</li>
+			<li class="flex items-center">
+				<div class="warning w-4 h-4 mr-4"></div>
+				<div>
+					Available replicas are less than the desired no. of replicas
+					<strong>OR</strong>
+					WARNING
+				</div>
+			</li>
+			<li class="flex items-center">
+				<div class="error w-4 h-4 mr-4"></div>
+				<div>
+					Replica failure
+					<strong>OR</strong>
+					ERROR
+				</div>
+			</li>
+		</ul>
+	</section>
+}
+
+templ resource(kind string, resources []Resource) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">{ kind }</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Name</th>
+				<th>Namespace</th>
+				<th>Ready</th>
+				<th>Up-to-date</th>
+				<th>Available</th>
+				<th>Events</th>
+				<th>Age</th>
+			</thead>
+			<tbody>
+				for _, r := range resources {
+					<tr>
+						if kind == kindDeployment {
+							if r.IsReplicaFailure {
+								<td class="error">{ r.Name }</td>
+							} else if r.IsAvailable {
+								<td class="success">{ r.Name }</td>
+							} else {
+								<td>{ r.Name }</td>
+							}
+						} else {
+							if r.AvailableReplicas == 0 {
+								<td class="error">{ r.Name }</td>
+							} else if r.AvailableReplicas == r.DesiredReplicas {
+								<td class="success">{ r.Name }</td>
+							} else {
+								<td class="warning">{ r.Name }</td>
+							}
+						}
+						<td>{ r.Namespace }</td>
+						<td class={ templ.KV("warning", r.ReadyReplicas != r.DesiredReplicas) }>
+							{ fmt.Sprintf("%d/%d", r.ReadyReplicas, r.DesiredReplicas) }
+						</td>
+						<td class={ templ.KV("warning", r.UpdatedReplicas != r.DesiredReplicas) }>
+							{ fmt.Sprintf("%d", r.UpdatedReplicas) }
+						</td>
+						<td class={ templ.KV("warning", r.AvailableReplicas != r.DesiredReplicas) }>
+							{ fmt.Sprintf("%d", r.AvailableReplicas) }
+						</td>
+						<td>
+							if len(r.Events) == 0 {
+								NONE
+							} else {
+								<ul class="whitespace-wrap space-y-2">
+									for _, ev := range r.Events {
+										<li class={ templ.KV("warning", ev.Type == "Warning"), "p-1" }>
+											<strong>{ ev.Reason }:</strong>
+											{ ev.Message }
+										</li>
+									}
+								</ul>
+							}
+						</td>
+						<td>{ r.Age.Round(time.Second).String() }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}

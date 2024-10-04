@@ -54,3 +54,19 @@ th {
 .warning {
   background-color: #fff36d;
 }
+
+.success {
+  background-color: #90ee90;
+}
+
+.error {
+  background-color: #ffa2ad;
+}
+
+.warning {
+  background-color: #fff36d;
+}
+
+.whitespace-wrap {
+  white-space: wrap;
+}
