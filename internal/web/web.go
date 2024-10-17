@@ -13,7 +13,9 @@ import (
 	"syscall"
 
 	"github.com/accuknox/rinc/internal/conf"
+	"github.com/accuknox/rinc/internal/db"
 	"github.com/accuknox/rinc/internal/util"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"
@@ -22,15 +24,25 @@ import (
 type Srv struct {
 	conf   conf.C
 	router *echo.Echo
+	mongo  *mongo.Client
 }
 
-func NewSrv(c conf.C) Srv {
+func NewSrv(c conf.C) (*Srv, error) {
+	// initialize router
 	r := echo.New()
 	r.Pre(echoMiddleware.RemoveTrailingSlash()) // trim trailing slash
-	return Srv{
+
+	// connect to mongodb
+	client, err := db.NewMongoDBClient(c.Mongodb)
+	if err != nil {
+		return nil, fmt.Errorf("creating mongo client: %w", err)
+	}
+
+	return &Srv{
 		conf:   c,
 		router: r,
-	}
+		mongo:  client,
+	}, nil
 }
 
 func (s Srv) Run(ctx context.Context) {
@@ -55,6 +67,24 @@ func (s Srv) Run(ctx context.Context) {
 	s.router.GET("/", s.Index)
 	s.router.GET("/:id", s.Index)
 	s.router.GET("/:id/:template", s.Report)
+
+	// terminate mongodb client connection on exit
+	defer func() {
+		err := s.mongo.Disconnect(context.TODO())
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"closing mongodb client connection",
+				slog.String("error", err.Error()),
+			)
+		}
+		slog.LogAttrs(
+			ctx,
+			slog.LevelDebug,
+			"closed mongodb client connection",
+		)
+	}()
 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()

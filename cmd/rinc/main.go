@@ -34,5 +34,9 @@ func main() {
 		return
 	}
 
-	web.NewSrv(*conf).Run(context.Background())
+	srv, err := web.NewSrv(*conf)
+	if err != nil {
+		log.Fatalf("creating web server instance: %s", err.Error())
+	}
+	srv.Run(context.Background())
 }

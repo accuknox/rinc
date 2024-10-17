@@ -16,6 +16,9 @@ func (c C) Validate() error {
 	if err := validateKubernetesClient(c.KubernetesClient); err != nil {
 		return fmt.Errorf("`kubernetesClient`: %w", err)
 	}
+	if err := validateMongodb(c.Mongodb); err != nil {
+		return fmt.Errorf("`mongodb`: %w", err)
+	}
 	if err := validateRabbitMQ(c.RabbitMQ); err != nil {
 		return fmt.Errorf("rabbitmq: %w", err)
 	}
@@ -52,6 +55,19 @@ func validateKubernetesClient(c KubernetesClient) error {
 		return nil
 	}
 	return fmt.Errorf("either `inCluster` or `kubeconfig` must be set")
+}
+
+func validateMongodb(c Mongodb) error {
+	if c.URI == "" {
+		return fmt.Errorf("missing `mongodb.uri`")
+	}
+	if c.Username == "" {
+		return fmt.Errorf("missing `mongodb.username`")
+	}
+	if c.Password == "" {
+		return fmt.Errorf("missing `mongodb.password`")
+	}
+	return nil
 }
 
 func validateRabbitMQ(rmq RabbitMQ) error {

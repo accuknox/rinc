@@ -19,6 +19,10 @@ kubernetesClient:
   # Either `inCluster` must be set to true or the path to a kubeconfig
   # file must be provided here.
   kubeconfig: ""
+mongodb:
+  uri: ""
+  username: ""
+  password: ""
 rabbitmq:
   # enable rabbitmq metrics and stats in the reports.
   enable: false

@@ -29,6 +29,7 @@ type C struct {
 	// KubernetesClient contains the configuration needed to communicate with
 	// the Kubernetes API server.
 	KubernetesClient KubernetesClient `koanf:"kubernetesClient"`
+	Mongodb          Mongodb          `koanf:"mongodb"`
 	// RabbitMQ contains the rabbitmq configuration.
 	RabbitMQ RabbitMQ `koanf:"rabbitmq"`
 	// LongJobs contains configuration related to the long-running job
