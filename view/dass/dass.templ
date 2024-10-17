@@ -3,6 +3,8 @@ package dass
 import (
 	"fmt"
 	"time"
+
+	types "github.com/accuknox/rinc/types/dass"
 )
 
 const (
@@ -10,35 +12,10 @@ const (
 	kindStatefulset = "StatefulSet"
 )
 
-type Data struct {
-	Timestamp    time.Time
-	Deployments  []Resource
-	Statefulsets []Resource
-}
-
-type Resource struct {
-	Name              string
-	Namespace         string
-	Age               time.Duration
-	DesiredReplicas   int32
-	ReadyReplicas     int32
-	AvailableReplicas int32
-	UpdatedReplicas   int32
-	Events            []Event
-	IsReplicaFailure  bool
-	IsAvailable       bool
-}
-
-type Event struct {
-	Type    string
-	Reason  string
-	Message string
-}
-
-templ Report(data Data) {
-	@heading(data.Timestamp)
-	@resource(kindDeployment, data.Deployments)
-	@resource(kindStatefulset, data.Statefulsets)
+templ Report(metrics types.Metrics) {
+	@heading(metrics.Timestamp)
+	@resource(kindDeployment, metrics.Deployments)
+	@resource(kindStatefulset, metrics.Statefulsets)
 }
 
 templ heading(stamp time.Time) {
@@ -75,7 +52,7 @@ templ heading(stamp time.Time) {
 	</section>
 }
 
-templ resource(kind string, resources []Resource) {
+templ resource(kind string, resources []types.Resource) {
 	<section class="px-3 lg:px-5 mb-5">
 		<h2 class="text-xl font-bold mb-2">{ kind }</h2>
 		<table class="full-width-table">

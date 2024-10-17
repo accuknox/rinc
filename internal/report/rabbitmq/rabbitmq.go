@@ -3,16 +3,14 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"time"
 
 	"github.com/accuknox/rinc/internal/conf"
-	"github.com/accuknox/rinc/internal/util"
-	"github.com/accuknox/rinc/view/layout"
-	"github.com/accuknox/rinc/view/partial"
-	tmpl "github.com/accuknox/rinc/view/rabbitmq"
+	"github.com/accuknox/rinc/internal/db"
+	types "github.com/accuknox/rinc/types/rabbitmq"
 
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -20,20 +18,21 @@ import (
 type Reporter struct {
 	kubeClient *kubernetes.Clientset
 	conf       conf.RabbitMQ
+	mongo      *mongo.Client
 }
 
 // NewReporter creates a new of the rabbitmq reporter.
-func NewReporter(c conf.RabbitMQ, kubeClient *kubernetes.Clientset) Reporter {
+func NewReporter(c conf.RabbitMQ, k *kubernetes.Clientset, mongo *mongo.Client) Reporter {
 	return Reporter{
 		conf:       c,
-		kubeClient: kubeClient,
+		kubeClient: k,
+		mongo:      mongo,
 	}
 }
 
 // Report satisfies the report.Reporter interface by writing the RabbitMQ
-// cluster status and fetched metrics to the provided io.Writer.
-func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error {
-	stamp := now.Format(util.IsosecLayout)
+// cluster status and fetched metrics to the mongodb database.
+func (r Reporter) Report(ctx context.Context, now time.Time) error {
 	up, err := r.IsClusterUp(ctx)
 	if err != nil {
 		slog.LogAttrs(
@@ -50,26 +49,32 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 			slog.LevelInfo,
 			"rabbitmq cluster is down",
 		)
-		c := layout.Base(
-			fmt.Sprintf("RabbitMQ - %s | AccuKnox Reports", stamp),
-			partial.Navbar(false, false),
-			tmpl.Report(tmpl.Data{
-				Timestamp: now,
-				IsHealthy: false,
-			}),
-		)
-		err := c.Render(ctx, to)
+		result, err := db.
+			Database(r.mongo).
+			Collection(db.CollectionRabbitmq).
+			InsertOne(ctx, types.Metrics{
+				Timestamp:   now,
+				IsClusterUp: false,
+			})
 		if err != nil {
 			slog.LogAttrs(
 				ctx,
 				slog.LevelError,
-				"rendering rabbitmq template",
+				"inserting into mongodb",
+				slog.Time("timestamp", now),
 				slog.String("error", err.Error()),
 			)
-			return fmt.Errorf("rendering rabbitmq template: %w", err)
+			return fmt.Errorf("inserting into mongodb: %w", err)
 		}
+		slog.LogAttrs(
+			ctx,
+			slog.LevelDebug,
+			"rabbitmq: inserted document into mongodb",
+			slog.Any("insertedId", result.InsertedID),
+		)
 		return nil
 	}
+
 	metrics, err := r.GetMetrics(ctx)
 	if err != nil {
 		slog.LogAttrs(
@@ -80,24 +85,27 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 		)
 		return fmt.Errorf("failed to fetch rabbitmq metrics: %w", err)
 	}
-	c := layout.Base(
-		fmt.Sprintf("RabbitMQ - %s | AccuKnox Reports", stamp),
-		partial.Navbar(false, false),
-		tmpl.Report(tmpl.Data{
-			Timestamp: now,
-			IsHealthy: true,
-			Metrics:   *metrics,
-		}),
-	)
-	err = c.Render(ctx, to)
+	metrics.Timestamp = now
+
+	result, err := db.Database(r.mongo).
+		Collection(db.CollectionRabbitmq).
+		InsertOne(ctx, metrics)
 	if err != nil {
 		slog.LogAttrs(
 			ctx,
 			slog.LevelError,
-			"rendering rabbitmq template",
+			"inserting into mongodb",
+			slog.Time("timestamp", now),
 			slog.String("error", err.Error()),
 		)
-		return fmt.Errorf("rendering rabbitmq template: %w", err)
+		return fmt.Errorf("inserting into mongodb: %w", err)
 	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"rabbitmq: inserted document into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
+
 	return nil
 }

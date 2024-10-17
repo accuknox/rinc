@@ -1,23 +1,15 @@
 package imagetag
 
-import "time"
+import (
+	"time"
 
-type Data struct {
-	Timestamp    time.Time
-	Deployments  []Resource
-	Statefulsets []Resource
-}
+	types "github.com/accuknox/rinc/types/imagetag"
+)
 
-type Resource struct {
-	Name      string
-	Namespace string
-	Images    []string
-}
-
-templ Report(data Data) {
-	@heading(data.Timestamp)
-	@resource("Deployments", data.Deployments)
-	@resource("StatefulSets", data.Statefulsets)
+templ Report(metrics types.Metrics) {
+	@heading(metrics.Timestamp)
+	@resource("Deployments", metrics.Deployments)
+	@resource("StatefulSets", metrics.Statefulsets)
 }
 
 templ heading(stamp time.Time) {
@@ -26,7 +18,7 @@ templ heading(stamp time.Time) {
 	</h1>
 }
 
-templ resource(name string, resources []Resource) {
+templ resource(name string, resources []types.Resource) {
 	<section class="px-3 lg:px-5 mb-5">
 		<h2 class="text-xl font-bold mb-2">{ name }</h2>
 		<table class="full-width-table">

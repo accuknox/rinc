@@ -3,16 +3,14 @@ package longjobs
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"time"
 
 	"github.com/accuknox/rinc/internal/conf"
-	"github.com/accuknox/rinc/internal/util"
-	"github.com/accuknox/rinc/view/layout"
-	tmpl "github.com/accuknox/rinc/view/longjobs"
-	"github.com/accuknox/rinc/view/partial"
+	"github.com/accuknox/rinc/internal/db"
+	types "github.com/accuknox/rinc/types/longjobs"
 
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -21,22 +19,23 @@ import (
 type Reporter struct {
 	kubeClient *kubernetes.Clientset
 	conf       conf.LongJobs
+	mongo      *mongo.Client
 }
 
 // NewReporter creates a new long-running jobs reporter.
-func NewReporter(c conf.LongJobs, kubeClient *kubernetes.Clientset) Reporter {
+func NewReporter(c conf.LongJobs, k *kubernetes.Clientset, mongo *mongo.Client) Reporter {
 	return Reporter{
 		conf:       c,
-		kubeClient: kubeClient,
+		kubeClient: k,
+		mongo:      mongo,
 	}
 }
 
 // Report satisfies the report.Reporter interface by fetching the long-running
-// jobs from the Kubernetes API server and writing it to the provided
-// io.Writer.
-func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error {
+// jobs from the Kubernetes API server and writing it to the database.
+func (r Reporter) Report(ctx context.Context, now time.Time) error {
 	threshold := now.Add(-r.conf.OlderThan)
-	var longJobs []tmpl.Job
+	var longJobs []types.Job
 	var cntinue string
 
 	for {
@@ -74,7 +73,7 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 			if job.Status.Ready != nil {
 				readyPods = *job.Status.Ready
 			}
-			longJobs = append(longJobs, tmpl.Job{
+			longJobs = append(longJobs, types.Job{
 				Name:       job.GetName(),
 				Namespace:  job.GetNamespace(),
 				Suspended:  isSuspended,
@@ -107,26 +106,29 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 		}
 	}
 
-	stamp := now.Format(util.IsosecLayout)
-	c := layout.Base(
-		fmt.Sprintf("Long Running Jobs - %s | AccuKnox Reports", stamp),
-		partial.Navbar(false, false),
-		tmpl.Report(tmpl.Data{
+	result, err := db.Database(r.mongo).
+		Collection(db.CollectionLongJobs).
+		InsertOne(ctx, types.Metrics{
 			Timestamp: now,
 			OlderThan: r.conf.OlderThan,
 			Jobs:      longJobs,
-		}),
-	)
-	err := c.Render(ctx, to)
+		})
 	if err != nil {
 		slog.LogAttrs(
 			ctx,
 			slog.LevelError,
-			"rendering long running jobs template",
+			"inserting into mongodb",
+			slog.Time("timestamp", now),
 			slog.String("error", err.Error()),
 		)
-		return fmt.Errorf("rendering long running jobs template: %w", err)
+		return fmt.Errorf("inserting into mongodb: %w", err)
 	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"longjobs: inserted document into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
 
 	return nil
 }

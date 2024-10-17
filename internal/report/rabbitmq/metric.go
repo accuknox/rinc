@@ -34,11 +34,12 @@ func (r Reporter) GetMetrics(ctx context.Context) (*types.Metrics, error) {
 		return nil, fmt.Errorf("fetch exchanges metrics: %w", err)
 	}
 	return &types.Metrics{
-		Overview:  *overview,
-		Nodes:     *nodes,
-		Queues:    *queues,
-		Consumers: *consumers,
-		Exchanges: *exchanges,
+		IsClusterUp: true,
+		Overview:    *overview,
+		Nodes:       *nodes,
+		Queues:      *queues,
+		Consumers:   *consumers,
+		Exchanges:   *exchanges,
 	}, nil
 }
 

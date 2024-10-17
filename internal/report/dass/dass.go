@@ -3,16 +3,14 @@ package dass
 import (
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"time"
 
 	"github.com/accuknox/rinc/internal/conf"
-	"github.com/accuknox/rinc/internal/util"
-	tmpl "github.com/accuknox/rinc/view/dass"
-	"github.com/accuknox/rinc/view/layout"
-	"github.com/accuknox/rinc/view/partial"
+	"github.com/accuknox/rinc/internal/db"
+	types "github.com/accuknox/rinc/types/dass"
 
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -21,20 +19,22 @@ import (
 type Reporter struct {
 	kubeClient *kubernetes.Clientset
 	conf       conf.DaSS
+	mongo      *mongo.Client
 }
 
 // NewReporter creates a new deployment and statefulset status (DaSS) reporter.
-func NewReporter(c conf.DaSS, kubeClient *kubernetes.Clientset) Reporter {
+func NewReporter(c conf.DaSS, k *kubernetes.Clientset, mongo *mongo.Client) Reporter {
 	return Reporter{
 		conf:       c,
-		kubeClient: kubeClient,
+		kubeClient: k,
+		mongo:      mongo,
 	}
 }
 
 // Report satisfies the report.Reporter interface by fetching the status of
 // deployments and statefulsets from the Kubernetes API server, and writes the
-// report to the provided io.Writer.
-func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error {
+// report to the database.
+func (r Reporter) Report(ctx context.Context, now time.Time) error {
 	depls, err := r.deployments(ctx)
 	if err != nil {
 		slog.LogAttrs(
@@ -57,32 +57,35 @@ func (r Reporter) Report(ctx context.Context, to io.Writer, now time.Time) error
 		return fmt.Errorf("fetching statefulsets: %w", err)
 	}
 
-	stamp := now.Format(util.IsosecLayout)
-	c := layout.Base(
-		fmt.Sprintf("Deployment & Statefulset Status - %s | AccuKnox Reports", stamp),
-		partial.Navbar(false, false),
-		tmpl.Report(tmpl.Data{
+	result, err := db.Database(r.mongo).
+		Collection(db.CollectionDass).
+		InsertOne(ctx, types.Metrics{
 			Timestamp:    now,
 			Deployments:  depls,
 			Statefulsets: ss,
-		}),
-	)
-	err = c.Render(ctx, to)
+		})
 	if err != nil {
 		slog.LogAttrs(
 			ctx,
 			slog.LevelError,
-			"rendering DaSS report template",
+			"inserting into mongodb",
+			slog.Time("timestamp", now),
 			slog.String("error", err.Error()),
 		)
-		return fmt.Errorf("rendering DaSS report template: %w", err)
+		return fmt.Errorf("inserting into mongodb: %w", err)
 	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"dass: inserted document into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
 
 	return nil
 }
 
-func (r Reporter) deployments(ctx context.Context) ([]tmpl.Resource, error) {
-	var deployments []tmpl.Resource
+func (r Reporter) deployments(ctx context.Context) ([]types.Resource, error) {
+	var deployments []types.Resource
 	var cntinue string
 
 	for {
@@ -123,7 +126,7 @@ func (r Reporter) deployments(ctx context.Context) ([]tmpl.Resource, error) {
 			if d.Spec.Replicas != nil {
 				desiredReplicas = *d.Spec.Replicas
 			}
-			deployments = append(deployments, tmpl.Resource{
+			deployments = append(deployments, types.Resource{
 				Name:              d.Name,
 				Namespace:         d.Namespace,
 				Age:               time.Since(d.CreationTimestamp.Time),
@@ -158,8 +161,8 @@ func (r Reporter) deployments(ctx context.Context) ([]tmpl.Resource, error) {
 	return deployments, nil
 }
 
-func (r Reporter) statefulset(ctx context.Context) ([]tmpl.Resource, error) {
-	var statefulsets []tmpl.Resource
+func (r Reporter) statefulset(ctx context.Context) ([]types.Resource, error) {
+	var statefulsets []types.Resource
 	var cntinue string
 
 	for {
@@ -200,7 +203,7 @@ func (r Reporter) statefulset(ctx context.Context) ([]tmpl.Resource, error) {
 			if s.Spec.Replicas != nil {
 				desiredReplicas = *s.Spec.Replicas
 			}
-			statefulsets = append(statefulsets, tmpl.Resource{
+			statefulsets = append(statefulsets, types.Resource{
 				Name:              s.Name,
 				Namespace:         s.Namespace,
 				Age:               time.Since(s.CreationTimestamp.Time),
@@ -233,8 +236,8 @@ func (r Reporter) statefulset(ctx context.Context) ([]tmpl.Resource, error) {
 	return statefulsets, nil
 }
 
-func (r Reporter) events(ctx context.Context, name, kind string) ([]tmpl.Event, error) {
-	var events []tmpl.Event
+func (r Reporter) events(ctx context.Context, name, kind string) ([]types.Event, error) {
+	var events []types.Event
 	evList, err := r.kubeClient.
 		CoreV1().
 		Events(r.conf.Namespace).
@@ -246,7 +249,7 @@ func (r Reporter) events(ctx context.Context, name, kind string) ([]tmpl.Event, 
 		return nil, err
 	}
 	for _, ev := range evList.Items {
-		events = append(events, tmpl.Event{
+		events = append(events, types.Event{
 			Type:    ev.Type,
 			Reason:  ev.Reason,
 			Message: ev.Message,
