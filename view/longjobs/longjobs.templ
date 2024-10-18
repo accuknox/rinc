@@ -5,10 +5,13 @@ import (
 	"time"
 
 	types "github.com/accuknox/rinc/types/longjobs"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
 )
 
-templ Report(metrics types.Metrics) {
+templ Report(metrics types.Metrics, alerts []db.Alert) {
 	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
 	@jobs(metrics.Jobs, metrics.OlderThan)
 }
 

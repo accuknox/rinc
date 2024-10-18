@@ -84,11 +84,52 @@ func (s Srv) ImageTags(c echo.Context) error {
 		})
 	}
 
+	result = db.
+		Database(s.mongo).
+		Collection(db.CollectionAlerts).
+		FindOne(c.Request().Context(), bson.M{
+			"timestamp": timestamp,
+			"from":      db.CollectionImageTag,
+		})
+	err = result.Err()
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		return render(renderParams{
+			Ctx: c,
+			Component: layout.Base(
+				title,
+				view.Error(
+					err.Error(),
+					http.StatusInternalServerError,
+				),
+			),
+			Status: http.StatusInternalServerError,
+		})
+	}
+
+	alerts := new(db.AlertDocument)
+
+	if err == nil {
+		err := result.Decode(&alerts)
+		if err != nil {
+			return render(renderParams{
+				Ctx: c,
+				Component: layout.Base(
+					title,
+					view.Error(
+						err.Error(),
+						http.StatusInternalServerError,
+					),
+				),
+				Status: http.StatusInternalServerError,
+			})
+		}
+	}
+
 	return render(renderParams{
 		Ctx: c,
 		Component: layout.Base(
 			title,
-			tmpl.Report(*metrics),
+			tmpl.Report(*metrics, alerts.Alerts),
 		),
 	})
 }

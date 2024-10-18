@@ -1,9 +1,21 @@
 package db
 
-import "github.com/accuknox/rinc/internal/conf"
+import (
+	"time"
 
-// Alert is the alert object schema that should be stored in the `alerts`
-// collection.
+	"github.com/accuknox/rinc/internal/conf"
+)
+
+// AlertDocument defines the schema that should be stored in the
+// `alerts` collection.
+type AlertDocument struct {
+	Timestamp time.Time `bson:"timestamp"`
+	From      string    `bson:"from"`
+	Alerts    []Alert   `bson:"alerts"`
+}
+
+// Alert defines the schema that should be stored within the
+// AlertDocument in the `alerts` collection.
 type Alert struct {
 	Message  string        `bson:"message"`
 	Severity conf.Severity `bson:"severity"`

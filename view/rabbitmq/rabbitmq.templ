@@ -6,11 +6,14 @@ import (
 
 	"github.com/accuknox/rinc/view/icon"
 	types "github.com/accuknox/rinc/types/rabbitmq"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
 )
 
-templ Report(metrics types.Metrics) {
+templ Report(metrics types.Metrics, alerts []db.Alert) {
 	@heading(metrics.Timestamp, metrics.IsClusterUp)
 	if metrics.IsClusterUp {
+		@partial.Alerts(alerts)
 		@summary(metrics.Overview)
 		@nodes(metrics.Nodes)
 		@queues(metrics.Queues)

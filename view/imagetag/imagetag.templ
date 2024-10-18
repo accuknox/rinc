@@ -4,10 +4,13 @@ import (
 	"time"
 
 	types "github.com/accuknox/rinc/types/imagetag"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
 )
 
-templ Report(metrics types.Metrics) {
+templ Report(metrics types.Metrics, alerts []db.Alert) {
 	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
 	@resource("Deployments", metrics.Deployments)
 	@resource("StatefulSets", metrics.Statefulsets)
 }

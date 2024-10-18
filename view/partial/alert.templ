@@ -1,0 +1,37 @@
+package partial
+
+import (
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/icon"
+)
+
+templ Alerts(alerts []db.Alert) {
+	if len(alerts) != 0 {
+		<section class="px-3 lg:px-5 mb-5">
+			<h2 class="text-xl font-bold mb-2">Alerts</h2>
+			<ul>
+				for _, alert := range alerts {
+					<li
+						class={
+							"p-2 text-lg flex items-center gap-2",
+							templ.KV("info", alert.Severity == "info"),
+							templ.KV("warning", alert.Severity == "warning"),
+							templ.KV("error", alert.Severity == "critical"),
+						}
+					>
+						<span>
+							if alert.Severity == "info" {
+								@icon.Info()
+							} else if alert.Severity == "warning" {
+								@icon.Warn()
+							} else if alert.Severity == "critical" {
+								@icon.Cross()
+							}
+						</span>
+						{ alert.Message }
+					</li>
+				}
+			</ul>
+		</section>
+	}
+}

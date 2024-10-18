@@ -15,8 +15,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/accuknox/rinc/internal/db"
 	types "github.com/accuknox/rinc/types/ceph"
 	"github.com/accuknox/rinc/view/icon"
+	"github.com/accuknox/rinc/view/partial"
 )
 
 const (
@@ -26,7 +28,7 @@ const (
 	HealthCrit = "HEALTH_CRIT"
 )
 
-func Report(metrics types.Metrics) templ.Component {
+func Report(metrics types.Metrics, alerts []db.Alert) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -40,6 +42,10 @@ func Report(metrics types.Metrics) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = heading(metrics.Timestamp, metrics.Status.Health.Status).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = partial.Alerts(alerts).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -162,7 +168,7 @@ func heading(stamp time.Time, health string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(stamp.UTC().Format("2006-01-02 15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 48, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 51, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -203,7 +209,7 @@ func health(data types.Health) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(data.Status)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 61, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 64, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -225,7 +231,7 @@ func health(data types.Health) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(check.Severity)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 77, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 80, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -243,7 +249,7 @@ func health(data types.Health) templ.Component {
 				var templ_7745c5c3_Var8 string
 				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(detail.Message)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 82, Col: 33}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 85, Col: 33}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
@@ -290,7 +296,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(version)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 104, Col: 18}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 107, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -313,7 +319,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 				usedPercent(data.DF.Stats),
 			))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 115, Col: 8}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 118, Col: 8}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -336,7 +342,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 				usedPercent(data.DF.Stats),
 			))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 124, Col: 8}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 127, Col: 8}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -359,7 +365,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 				usedPercent(data.DF.Stats),
 			))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 133, Col: 8}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 136, Col: 8}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -377,7 +383,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", data.Hosts))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 139, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 142, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -394,7 +400,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 			mgrStandBys(data.MGRMap),
 		))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 148, Col: 7}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 151, Col: 7}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -407,7 +413,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("Quorum %s", monQuorum(data.MonStatus.MonMap.Mon)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 154, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 157, Col: 70}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
@@ -425,7 +431,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 			osdsIn(data.OSDMap.OSDs),
 		))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 165, Col: 7}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 168, Col: 7}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
@@ -438,7 +444,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d pools, %d pgs", len(data.Pools), pgCount(data.Pools)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 171, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 174, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
@@ -456,7 +462,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d %s", count, status))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 180, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 183, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -474,7 +480,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", data.PGInfo.PGsPerOSD))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 188, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 191, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -493,7 +499,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 			data.ClientPerf.WriteOpPerSec,
 		))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 199, Col: 7}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 202, Col: 7}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -506,7 +512,7 @@ func stats(data types.Status, version string, numBuckets int) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", numBuckets))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 204, Col: 40}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 207, Col: 40}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -548,7 +554,7 @@ func hosts(data []types.Host) templ.Component {
 			var templ_7745c5c3_Var24 string
 			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(host.Hostname)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 224, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 227, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 			if templ_7745c5c3_Err != nil {
@@ -561,7 +567,7 @@ func hosts(data []types.Host) templ.Component {
 			var templ_7745c5c3_Var25 string
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(host.Addr)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 225, Col: 21}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 228, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -594,7 +600,7 @@ func hosts(data []types.Host) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(host.Status)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 233, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 236, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -617,7 +623,7 @@ func hosts(data []types.Host) templ.Component {
 				var templ_7745c5c3_Var27 string
 				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 238, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 241, Col: 20}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
@@ -670,7 +676,7 @@ func inventory(data []types.Inventory) templ.Component {
 				var templ_7745c5c3_Var29 string
 				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(i.Hostname)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 265, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 268, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
@@ -683,7 +689,7 @@ func inventory(data []types.Inventory) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(disk.Type)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 266, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 269, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 				if templ_7745c5c3_Err != nil {
@@ -696,7 +702,7 @@ func inventory(data []types.Inventory) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(disk.Path)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 267, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 270, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
@@ -710,7 +716,7 @@ func inventory(data []types.Inventory) templ.Component {
 					var templ_7745c5c3_Var32 string
 					templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(toHumanReadable(disk.Stats.Size))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 270, Col: 43}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 273, Col: 43}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 					if templ_7745c5c3_Err != nil {
@@ -729,7 +735,7 @@ func inventory(data []types.Inventory) templ.Component {
 					var templ_7745c5c3_Var33 string
 					templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%v", disk.Available))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 274, Col: 63}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 277, Col: 63}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 					if templ_7745c5c3_Err != nil {
@@ -747,7 +753,7 @@ func inventory(data []types.Inventory) templ.Component {
 					var templ_7745c5c3_Var34 string
 					templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%v", disk.Available))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 276, Col: 61}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 279, Col: 61}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 					if templ_7745c5c3_Err != nil {
@@ -770,7 +776,7 @@ func inventory(data []types.Inventory) templ.Component {
 					var templ_7745c5c3_Var35 string
 					templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(reason)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 281, Col: 22}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 284, Col: 22}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 					if templ_7745c5c3_Err != nil {
@@ -823,7 +829,7 @@ func devices(data []types.Device) templ.Component {
 			var templ_7745c5c3_Var37 string
 			templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(dev.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 304, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 307, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 			if templ_7745c5c3_Err != nil {
@@ -841,7 +847,7 @@ func devices(data []types.Device) templ.Component {
 				var templ_7745c5c3_Var38 string
 				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(l.Host)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 315, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 318, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
@@ -854,7 +860,7 @@ func devices(data []types.Device) templ.Component {
 				var templ_7745c5c3_Var39 string
 				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinStringErrs(l.Dev)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 316, Col: 22}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 319, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 				if templ_7745c5c3_Err != nil {
@@ -867,7 +873,7 @@ func devices(data []types.Device) templ.Component {
 				var templ_7745c5c3_Var40 string
 				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(l.Path)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 317, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 320, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 				if templ_7745c5c3_Err != nil {
@@ -919,7 +925,7 @@ func buckets(data []types.Bucket) templ.Component {
 			var templ_7745c5c3_Var42 string
 			templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(b.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 345, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 348, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 			if templ_7745c5c3_Err != nil {
@@ -932,7 +938,7 @@ func buckets(data []types.Bucket) templ.Component {
 			var templ_7745c5c3_Var43 string
 			templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(b.Owner)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 346, Col: 19}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 349, Col: 19}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 			if templ_7745c5c3_Err != nil {
@@ -945,7 +951,7 @@ func buckets(data []types.Bucket) templ.Component {
 			var templ_7745c5c3_Var44 string
 			templ_7745c5c3_Var44, templ_7745c5c3_Err = templ.JoinStringErrs(toHumanReadable(b.Usage.Main.SizeUtilized + b.Usage.Multimeta.SizeUtilized))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 347, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 350, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var44))
 			if templ_7745c5c3_Err != nil {
@@ -958,7 +964,7 @@ func buckets(data []types.Bucket) templ.Component {
 			var templ_7745c5c3_Var45 string
 			templ_7745c5c3_Var45, templ_7745c5c3_Err = templ.JoinStringErrs(bucketCapacityLimit(b.Quota))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 348, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 351, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var45))
 			if templ_7745c5c3_Err != nil {
@@ -971,7 +977,7 @@ func buckets(data []types.Bucket) templ.Component {
 			var templ_7745c5c3_Var46 string
 			templ_7745c5c3_Var46, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", b.Usage.Main.NumObjects+b.Usage.Multimeta.NumObjects))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 349, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 352, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var46))
 			if templ_7745c5c3_Err != nil {
@@ -984,7 +990,7 @@ func buckets(data []types.Bucket) templ.Component {
 			var templ_7745c5c3_Var47 string
 			templ_7745c5c3_Var47, templ_7745c5c3_Err = templ.JoinStringErrs(bucketObjectLimit(b.Quota))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 350, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/ceph/ceph.templ`, Line: 353, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var47))
 			if templ_7745c5c3_Err != nil {

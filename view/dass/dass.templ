@@ -5,6 +5,8 @@ import (
 	"time"
 
 	types "github.com/accuknox/rinc/types/dass"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
 )
 
 const (
@@ -12,8 +14,9 @@ const (
 	kindStatefulset = "StatefulSet"
 )
 
-templ Report(metrics types.Metrics) {
+templ Report(metrics types.Metrics, alerts []db.Alert) {
 	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
 	@resource(kindDeployment, metrics.Deployments)
 	@resource(kindStatefulset, metrics.Statefulsets)
 }

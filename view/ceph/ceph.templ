@@ -7,6 +7,8 @@ import (
 
 	"github.com/accuknox/rinc/view/icon"
 	types "github.com/accuknox/rinc/types/ceph"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
 )
 
 const (
@@ -16,8 +18,9 @@ const (
 	HealthCrit = "HEALTH_CRIT"
 )
 
-templ Report(metrics types.Metrics) {
+templ Report(metrics types.Metrics, alerts []db.Alert) {
 	@heading(metrics.Timestamp, metrics.Status.Health.Status)
+	@partial.Alerts(alerts)
 	@health(metrics.Status.Health)
 	@stats(metrics.Status, metrics.Summary.Version, len(metrics.Buckets))
 	@hosts(metrics.Hosts)
