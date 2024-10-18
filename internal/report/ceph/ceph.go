@@ -9,8 +9,10 @@ import (
 
 	"github.com/accuknox/rinc/internal/conf"
 	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/internal/report"
 	types "github.com/accuknox/rinc/types/ceph"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"k8s.io/client-go/kubernetes"
 )
@@ -127,32 +129,60 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		return fmt.Errorf("fetching ceph RGW buckets: %w", err)
 	}
 
+	metrics := types.Metrics{
+		Timestamp:   now,
+		Summary:     *summary,
+		Status:      *status,
+		Buckets:     buckets,
+		Devices:     devices,
+		Hosts:       hosts,
+		Inventories: inventories,
+	}
+
 	result, err := db.
 		Database(r.mongo).
 		Collection(db.CollectionCeph).
-		InsertOne(ctx, types.Metrics{
-			Timestamp:   now,
-			Summary:     *summary,
-			Status:      *status,
-			Buckets:     buckets,
-			Devices:     devices,
-			Hosts:       hosts,
-			Inventories: inventories,
+		InsertOne(ctx, metrics)
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"ceph: inserting metrics into mongodb",
+			slog.Time("timestamp", now),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("inserting metrics into mongodb: %w", err)
+	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"ceph: inserted metrics into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
+
+	alerts := report.SoftEvaluateAlerts(ctx, r.conf.Alerts, metrics)
+	result, err = db.
+		Database(r.mongo).
+		Collection(db.CollectionAlerts).
+		InsertOne(ctx, bson.M{
+			"timestamp": now,
+			"from":      db.CollectionCeph,
+			"alerts":    alerts,
 		})
 	if err != nil {
 		slog.LogAttrs(
 			ctx,
 			slog.LevelError,
-			"inserting into mongodb",
+			"ceph: inserting alerts into mongodb",
 			slog.Time("timestamp", now),
 			slog.String("error", err.Error()),
 		)
-		return fmt.Errorf("inserting into mongodb: %w", err)
+		return fmt.Errorf("inserting alerts into mongodb: %w", err)
 	}
 	slog.LogAttrs(
 		ctx,
 		slog.LevelDebug,
-		"ceph: inserted document into mongodb",
+		"ceph: inserted alerts into mongodb",
 		slog.Any("insertedId", result.InsertedID),
 	)
 

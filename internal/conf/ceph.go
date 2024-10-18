@@ -8,6 +8,9 @@ type Ceph struct {
 	//
 	// Required.
 	DashboardAPI CephDashboardAPI `kaonf:"dashboardAPI"`
+	// Alerts contain a message template, a severity level, and a conditional
+	// expression to trigger the respective alert.
+	Alerts []Alert `koanf:"alerts"`
 }
 
 // CephDashboardAPI contains configuration to access the ceph dashboard API.

@@ -8,8 +8,10 @@ import (
 
 	"github.com/accuknox/rinc/internal/conf"
 	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/internal/report"
 	types "github.com/accuknox/rinc/types/rabbitmq"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"k8s.io/client-go/kubernetes"
 )
@@ -104,6 +106,32 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		ctx,
 		slog.LevelDebug,
 		"rabbitmq: inserted document into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
+
+	alerts := report.SoftEvaluateAlerts(ctx, r.conf.Alerts, metrics)
+	result, err = db.
+		Database(r.mongo).
+		Collection(db.CollectionAlerts).
+		InsertOne(ctx, bson.M{
+			"timestamp": now,
+			"from":      db.CollectionRabbitmq,
+			"alerts":    alerts,
+		})
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"rabbitmq: inserting alerts into mongodb",
+			slog.Time("timestamp", now),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("inserting alerts into mongodb: %w", err)
+	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"rabbitmq: inserted alerts into mongodb",
 		slog.Any("insertedId", result.InsertedID),
 	)
 

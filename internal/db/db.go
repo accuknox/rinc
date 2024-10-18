@@ -11,22 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 )
 
-const (
-	CollectionRabbitmq = "rabbitmq"
-	CollectionCeph     = "ceph"
-	CollectionImageTag = "imagetag"
-	CollectionDass     = "dass"
-	CollectionLongJobs = "longjobs"
-)
-
-var Collections = []string{
-	CollectionRabbitmq,
-	CollectionCeph,
-	CollectionImageTag,
-	CollectionDass,
-	CollectionLongJobs,
-}
-
 // NewMongoDBClient creates a new client connection to the configured mongodb
 // instance.
 func NewMongoDBClient(conf conf.Mongodb) (*mongo.Client, error) {
@@ -54,6 +38,7 @@ func NewMongoDBClient(conf conf.Mongodb) (*mongo.Client, error) {
 	return client, nil
 }
 
+// Database returns the `rinc` database object for the provided client.
 func Database(mongo *mongo.Client) *mongo.Database {
 	return mongo.Database("rinc")
 }

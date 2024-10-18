@@ -17,4 +17,7 @@ type LongJobs struct {
 	// IncludeSuspended specifies whether long-running suspended jobs should be
 	// included in the report.
 	IncludeSuspended bool `koanf:"includeSuspended"`
+	// Alerts contain a message template, a severity level, and a conditional
+	// expression to trigger the respective alert.
+	Alerts []Alert `koanf:"alerts"`
 }

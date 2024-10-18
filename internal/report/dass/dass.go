@@ -8,8 +8,10 @@ import (
 
 	"github.com/accuknox/rinc/internal/conf"
 	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/internal/report"
 	types "github.com/accuknox/rinc/types/dass"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -57,13 +59,15 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		return fmt.Errorf("fetching statefulsets: %w", err)
 	}
 
+	metrics := types.Metrics{
+		Timestamp:    now,
+		Deployments:  depls,
+		Statefulsets: ss,
+	}
+
 	result, err := db.Database(r.mongo).
 		Collection(db.CollectionDass).
-		InsertOne(ctx, types.Metrics{
-			Timestamp:    now,
-			Deployments:  depls,
-			Statefulsets: ss,
-		})
+		InsertOne(ctx, metrics)
 	if err != nil {
 		slog.LogAttrs(
 			ctx,
@@ -78,6 +82,32 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		ctx,
 		slog.LevelDebug,
 		"dass: inserted document into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
+
+	alerts := report.SoftEvaluateAlerts(ctx, r.conf.Alerts, metrics)
+	result, err = db.
+		Database(r.mongo).
+		Collection(db.CollectionAlerts).
+		InsertOne(ctx, bson.M{
+			"timestamp": now,
+			"from":      db.CollectionDass,
+			"alerts":    alerts,
+		})
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"dass: inserting alerts into mongodb",
+			slog.Time("timestamp", now),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("inserting alerts into mongodb: %w", err)
+	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"dass: inserted alerts into mongodb",
 		slog.Any("insertedId", result.InsertedID),
 	)
 

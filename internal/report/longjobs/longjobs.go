@@ -8,8 +8,10 @@ import (
 
 	"github.com/accuknox/rinc/internal/conf"
 	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/internal/report"
 	types "github.com/accuknox/rinc/types/longjobs"
 
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -106,13 +108,15 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		}
 	}
 
+	metrics := types.Metrics{
+		Timestamp: now,
+		OlderThan: r.conf.OlderThan,
+		Jobs:      longJobs,
+	}
+
 	result, err := db.Database(r.mongo).
 		Collection(db.CollectionLongJobs).
-		InsertOne(ctx, types.Metrics{
-			Timestamp: now,
-			OlderThan: r.conf.OlderThan,
-			Jobs:      longJobs,
-		})
+		InsertOne(ctx, metrics)
 	if err != nil {
 		slog.LogAttrs(
 			ctx,
@@ -127,6 +131,32 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		ctx,
 		slog.LevelDebug,
 		"longjobs: inserted document into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
+
+	alerts := report.SoftEvaluateAlerts(ctx, r.conf.Alerts, metrics)
+	result, err = db.
+		Database(r.mongo).
+		Collection(db.CollectionAlerts).
+		InsertOne(ctx, bson.M{
+			"timestamp": now,
+			"from":      db.CollectionLongJobs,
+			"alerts":    alerts,
+		})
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"longjobs: inserting alerts into mongodb",
+			slog.Time("timestamp", now),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("inserting alerts into mongodb: %w", err)
+	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"longjobs: inserted alerts into mongodb",
 		slog.Any("insertedId", result.InsertedID),
 	)
 
