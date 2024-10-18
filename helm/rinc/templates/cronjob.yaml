@@ -57,9 +57,6 @@ spec:
                   readOnly: true
                   mountPath: /etc/rinc/config.yaml
                   subPath: config.yaml
-                - name: {{ include "pvc.name" . }}
-                  readOnly: false
-                  mountPath: {{ .Values.config.output }}
               {{- with .Values.web.additionalVolumeMounts }}
                 {{- toYaml . | nindent 12 }}
               {{- end }}
@@ -68,10 +65,6 @@ spec:
               configMap:
                 name: {{ include "configMap.name" . }}
                 optional: false
-            - name: {{ include "pvc.name" . }}
-              persistentVolumeClaim:
-                claimName: {{ include "pvc.name" . }}
-                readOnly: false
           {{- with .Values.reportingCronJob.additionalVolumes }}
             {{- toYaml . | nindent 8 }}
           {{- end }}

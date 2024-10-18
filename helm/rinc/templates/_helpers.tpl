@@ -40,16 +40,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   {{- end }}
 {{- end }}
 
-{{- define "pvc.name" -}}
-  {{- if .Values.persistentVolumeClaim.fullnameOverride }}
-    {{- .Values.persistentVolumeClaim.fullnameOverride | trunc 63 | trimSuffix "-" }}
-  {{- else if .Values.persistentVolumeClaim.nameOverride }}
-    {{- printf "%s-%s" .Chart.Name .Values.persistentVolumeClaim.nameOverride | trunc 63 | trimSuffix "-" }}
-  {{- else }}
-    {{- printf "%s-pvc" .Chart.Name | trunc 63 | trimSuffix "-" }}
-  {{- end }}
-{{- end }}
-
 {{- define "cronjob.name" -}}
   {{- if .Values.reportingCronJob.fullnameOverride }}
     {{- .Values.reportingCronJob.fullnameOverride | trunc 63 | trimSuffix "-" }}

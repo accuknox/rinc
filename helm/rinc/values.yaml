@@ -103,8 +103,10 @@ config:
   log:
     level: "info"  # possible values: "debug", "info", "warn", "error"
     format: "text" # possible values: "text", "json"
-  # path to the reports output directory
-  output: "/data/reports"
+  mongodb:
+    uri: ""
+    username: ""
+    password: ""
   rabbitmq:
     # enable rabbitmq metrics and stats in the reports.
     enable: false
