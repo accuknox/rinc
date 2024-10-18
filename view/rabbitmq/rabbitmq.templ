@@ -8,20 +8,14 @@ import (
 	types "github.com/accuknox/rinc/types/rabbitmq"
 )
 
-type Data struct {
-	Timestamp time.Time
-	IsHealthy bool
-	Metrics   types.Metrics
-}
-
-templ Report(data Data) {
-	@heading(data.Timestamp, data.IsHealthy)
-	if data.IsHealthy {
-		@summary(data.Metrics.Overview)
-		@nodes(data.Metrics.Nodes)
-		@queues(data.Metrics.Queues)
-		@consumers(data.Metrics.Consumers)
-		@exchanges(data.Metrics.Exchanges)
+templ Report(metrics types.Metrics) {
+	@heading(metrics.Timestamp, metrics.IsClusterUp)
+	if metrics.IsClusterUp {
+		@summary(metrics.Overview)
+		@nodes(metrics.Nodes)
+		@queues(metrics.Queues)
+		@consumers(metrics.Consumers)
+		@exchanges(metrics.Exchanges)
 	}
 }
 

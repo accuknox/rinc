@@ -11,8 +11,12 @@ import (
 	"github.com/accuknox/rinc/internal/conf"
 )
 
-// IsosecLayout defines isosec timestamp.
-const IsosecLayout = "20060102150405"
+const (
+	// IsosecLayout defines isosec timestamp.
+	IsosecLayout = "20060102150405"
+	// HTMLFormDateLayout defines html form date layout.
+	HTMLFormDateLayout = "2006-01-02"
+)
 
 // GetNamespaceFromFQDN parses a Kubernetes FQDN and extracts the namespace
 // from it.

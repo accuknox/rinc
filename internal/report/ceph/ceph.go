@@ -131,11 +131,13 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		Database(r.mongo).
 		Collection(db.CollectionCeph).
 		InsertOne(ctx, types.Metrics{
-			Timestamp: now,
-			Summary:   *summary,
-			Status:    *status,
-			Buckets:   buckets,
-			Devices:   devices,
+			Timestamp:   now,
+			Summary:     *summary,
+			Status:      *status,
+			Buckets:     buckets,
+			Devices:     devices,
+			Hosts:       hosts,
+			Inventories: inventories,
 		})
 	if err != nil {
 		slog.LogAttrs(

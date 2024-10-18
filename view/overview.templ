@@ -2,14 +2,14 @@ package view
 
 import "github.com/accuknox/rinc/view/icon"
 
-type IndexStatus struct {
+type OverviewStatus struct {
 	Name    string
 	Slug    string
 	ID      string
 	Healthy *bool
 }
 
-templ Index(statuses []IndexStatus) {
+templ Overview(statuses []OverviewStatus) {
 	<main class="flex bg-accent min-h-screen justify-center items-center">
 		<div class="px-3 lg:px-0 w-full lg:w-2/3 grid grid-cols-1 lg:grid-cols-3 gap-2">
 			for _, status := range statuses {
@@ -32,11 +32,5 @@ templ Index(statuses []IndexStatus) {
 				</a>
 			}
 		</div>
-	</main>
-}
-
-templ EmptyIndex() {
-	<main class="flex bg-accent min-h-screen justify-center items-center">
-		<h2>No reports exist</h2>
 	</main>
 }

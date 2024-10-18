@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -40,24 +39,16 @@ func (s Srv) Run(ctx context.Context) {
 	// configure logger
 	slog.SetDefault(util.NewLogger(s.conf.Log))
 
-	err := os.MkdirAll(s.conf.Output, 0o755)
-	if err != nil {
-		slog.LogAttrs(
-			ctx,
-			slog.LevelError,
-			fmt.Sprintf("creating %q directory", s.conf.Output),
-			slog.String("error", err.Error()),
-		)
-		os.Exit(1)
-	}
-
 	// setup routes
 	s.router.Static("/static", filepath.Join("static"))
-	s.router.GET("/history", s.HistoryPage)
+	s.router.GET("/", s.HistoryPage)
 	s.router.POST("/history/search", s.HistorySearch)
-	s.router.GET("/", s.Index)
-	s.router.GET("/:id", s.Index)
-	s.router.GET("/:id/:template", s.Report)
+	s.router.GET("/:id", s.Overview)
+	s.router.GET("/:id/rabbitmq", s.RabbitMQ)
+	s.router.GET("/:id/ceph", s.Ceph)
+	s.router.GET("/:id/imagetags", s.ImageTags)
+	s.router.GET("/:id/longjobs", s.Longjobs)
+	s.router.GET("/:id/deployment-and-statefulset-status", s.Dass)
 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()

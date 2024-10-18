@@ -1,4 +1,4 @@
-package rabbitmq
+package ceph
 
 import (
 	"fmt"
@@ -16,24 +16,14 @@ const (
 	HealthCrit = "HEALTH_CRIT"
 )
 
-type Data struct {
-	Timestamp   time.Time
-	Version     string
-	Status      types.Status
-	Hosts       []types.Host
-	Devices     []types.Device
-	Inventories []types.Inventory
-	Buckets     []types.Bucket
-}
-
-templ Report(data Data) {
-	@heading(data.Timestamp, data.Status.Health.Status)
-	@health(data.Status.Health)
-	@stats(data.Status, data.Version, len(data.Buckets))
-	@hosts(data.Hosts)
-	@inventory(data.Inventories)
-	@devices(data.Devices)
-	@buckets(data.Buckets)
+templ Report(metrics types.Metrics) {
+	@heading(metrics.Timestamp, metrics.Status.Health.Status)
+	@health(metrics.Status.Health)
+	@stats(metrics.Status, metrics.Summary.Version, len(metrics.Buckets))
+	@hosts(metrics.Hosts)
+	@inventory(metrics.Inventories)
+	@devices(metrics.Devices)
+	@buckets(metrics.Buckets)
 }
 
 templ indicator(status string, size ...int) {

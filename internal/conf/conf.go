@@ -24,8 +24,6 @@ type C struct {
 	// must be forcefully terminated. A value of 0 implies no forceful
 	// termination.
 	TerminationGracePeriod time.Duration `koanf:"terminationGracePeriod"`
-	// Output is the path to the reports output directory.
-	Output string `koanf:"output"`
 	// KubernetesClient contains the configuration needed to communicate with
 	// the Kubernetes API server.
 	KubernetesClient KubernetesClient `koanf:"kubernetesClient"`
@@ -52,7 +50,6 @@ func New(args ...string) (*C, error) {
 	err := k.Load(confmap.Provider(map[string]any{
 		"log.level":                 "info",
 		"log.format":                "text",
-		"output":                    "reports",
 		"terminationGracePeriod":    time.Second * 10,
 		"longRunningJobs.olderThan": time.Hour * 12,
 	}, "."), nil)

@@ -19,6 +19,14 @@ const (
 	CollectionLongJobs = "longjobs"
 )
 
+var Collections = []string{
+	CollectionRabbitmq,
+	CollectionCeph,
+	CollectionImageTag,
+	CollectionDass,
+	CollectionLongJobs,
+}
+
 // NewMongoDBClient creates a new client connection to the configured mongodb
 // instance.
 func NewMongoDBClient(conf conf.Mongodb) (*mongo.Client, error) {

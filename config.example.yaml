@@ -1,8 +1,6 @@
 log:
   level: "info"  # possible values: "debug", "info", "warn", "error"
   format: "text" # possible values: "text", "json"
-# path to the reports output directory
-output: "reports"
 # sets the period after which the web server must be forcefully
 # terminated. A value of 0 implies no forceful termination.
 terminationGracePeriod: 10s
