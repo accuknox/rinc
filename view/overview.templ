@@ -1,13 +1,20 @@
 package view
 
-import "github.com/accuknox/rinc/view/icon"
+import (
+	"fmt"
+
+	"github.com/accuknox/rinc/view/icon"
+	"github.com/accuknox/rinc/internal/conf"
+)
 
 type OverviewStatus struct {
-	Name    string
-	Slug    string
-	ID      string
-	Healthy *bool
+	Name        string
+	Slug        string
+	ID          string
+	AlertsCount AlertsCount
 }
+
+type AlertsCount map[conf.Severity]int
 
 templ Overview(statuses []OverviewStatus) {
 	<main class="flex bg-accent min-h-screen justify-center items-center">
@@ -15,20 +22,30 @@ templ Overview(statuses []OverviewStatus) {
 			for _, status := range statuses {
 				<a
 					href={ templ.URL("/" + status.ID + "/" + status.Slug) }
-					class="flex flex-col lg:flex-row bg-white p-5 justify-between items-center hover:underline rounded-md shadow-lg"
+					class="flex flex-col lg:flex-row bg-white p-5 justify-between items-center rounded-md shadow-lg gap-4"
 				>
 					<div>{ status.Name }</div>
-					if status.Healthy == nil {
+					<div class="flex space-x-2">
+						for severity, n := range status.AlertsCount {
+							if severity == conf.SeverityInfo {
+								<div class="text-info flex items-center space-x-1">
+									@icon.Info()
+									<span>{ fmt.Sprintf("%d", n) }</span>
+								</div>
+							} else if severity == conf.SeverityWarning {
+								<div class="text-warning flex items-center space-x-1">
+									@icon.Warn()
+									<span>{ fmt.Sprintf("%d", n) }</span>
+								</div>
+							} else if severity == conf.SeverityCritical {
+								<div class="text-error flex items-center space-x-1">
+									@icon.Cross()
+									<span>{ fmt.Sprintf("%d", n) }</span>
+								</div>
+							}
+						}
 						@icon.RightChevron()
-					} else if *status.Healthy {
-						<div class="text-green-700">
-							@icon.Check()
-						</div>
-					} else {
-						<div class="text-red-700">
-							@icon.Cross()
-						</div>
-					}
+					</div>
 				</a>
 			}
 		</div>

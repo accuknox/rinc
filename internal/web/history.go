@@ -22,7 +22,7 @@ func (s Srv) HistoryPage(c echo.Context) error {
 		Ctx: c,
 		Component: layout.Base(
 			"History | AccuKnox Reports",
-			partial.Navbar(false, false),
+			partial.Navbar(false),
 			view.HistoryForm(),
 		),
 	})
@@ -91,6 +91,7 @@ func (s Srv) HistorySearch(c echo.Context) error {
 			t := new(docWithStamp)
 			err := cursor.Decode(t)
 			if err != nil {
+				cursor.Close(c.Request().Context())
 				return render(renderParams{
 					Ctx: c,
 					Component: view.Error(

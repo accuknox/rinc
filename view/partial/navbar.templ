@@ -1,6 +1,6 @@
 package partial
 
-templ Navbar(showLinks, roundedBottom bool) {
+templ Navbar(roundedBottom bool) {
 	<header>
 		<nav
 			class={
@@ -15,11 +15,6 @@ templ Navbar(showLinks, roundedBottom bool) {
 					<img class="w-36" src="/static/accuknox-logo.svg" alt="AccuKnox Logo"/>
 				</a>
 			</div>
-			if showLinks {
-				<div class="flex-none">
-					<a href="/history">History</a>
-				</div>
-			}
 		</nav>
 	</header>
 }

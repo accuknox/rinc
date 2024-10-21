@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,7 +21,7 @@ import (
 func (s Srv) Overview(c echo.Context) error {
 	id := c.Param("id")
 	title := fmt.Sprintf("%s - Overview | Accuknox Reports", id)
-	timestamp, err := time.Parse(util.IsosecLayout, id)
+	at, err := time.Parse(util.IsosecLayout, id)
 	if err != nil {
 		return render(renderParams{
 			Ctx: c,
@@ -42,7 +43,7 @@ func (s Srv) Overview(c echo.Context) error {
 			Database(s.mongo).
 			Collection(coll).
 			FindOne(c.Request().Context(), bson.M{
-				"timestamp": timestamp,
+				"timestamp": at,
 			})
 		if err := result.Err(); err != nil {
 			if errors.Is(err, mongo.ErrNoDocuments) {
@@ -60,36 +61,55 @@ func (s Srv) Overview(c echo.Context) error {
 				Status: http.StatusInternalServerError,
 			})
 		}
+		count, err := s.fetchAlertsCount(c.Request().Context(), coll, at)
+		if err != nil {
+			return render(renderParams{
+				Ctx: c,
+				Component: layout.Base(
+					"AccuKnox Reports",
+					view.Error(
+						err.Error(),
+						http.StatusInternalServerError,
+					),
+				),
+				Status: http.StatusInternalServerError,
+			})
+		}
 		switch coll {
 		case db.CollectionRabbitmq:
 			statuses = append(statuses, view.OverviewStatus{
-				Name: "RabbitMQ",
-				Slug: "rabbitmq",
-				ID:   id,
+				Name:        "RabbitMQ",
+				Slug:        "rabbitmq",
+				ID:          id,
+				AlertsCount: count,
 			})
 		case db.CollectionCeph:
 			statuses = append(statuses, view.OverviewStatus{
-				Name: "CEPH",
-				Slug: "ceph",
-				ID:   id,
+				Name:        "CEPH",
+				Slug:        "ceph",
+				ID:          id,
+				AlertsCount: count,
 			})
 		case db.CollectionDass:
 			statuses = append(statuses, view.OverviewStatus{
-				Name: "Deployment & Statefulset Status",
-				Slug: "deployment-and-statefulset-status",
-				ID:   id,
+				Name:        "Deployment & Statefulset Status",
+				Slug:        "deployment-and-statefulset-status",
+				ID:          id,
+				AlertsCount: count,
 			})
 		case db.CollectionLongJobs:
 			statuses = append(statuses, view.OverviewStatus{
-				Name: "Long Running Jobs",
-				Slug: "longjobs",
-				ID:   id,
+				Name:        "Long Running Jobs",
+				Slug:        "longjobs",
+				ID:          id,
+				AlertsCount: count,
 			})
 		case db.CollectionImageTag:
 			statuses = append(statuses, view.OverviewStatus{
-				Name: "Image Tags",
-				Slug: "imagetags",
-				ID:   id,
+				Name:        "Image Tags",
+				Slug:        "imagetags",
+				ID:          id,
+				AlertsCount: count,
 			})
 		}
 	}
@@ -99,7 +119,7 @@ func (s Srv) Overview(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
-				partial.Navbar(true, true),
+				partial.Navbar(true),
 				view.Error(
 					"Kindly make sure that the URL is correct",
 					http.StatusNotFound,
@@ -113,9 +133,35 @@ func (s Srv) Overview(c echo.Context) error {
 		Ctx: c,
 		Component: layout.Base(
 			title,
-			partial.Navbar(true, true),
+			partial.Navbar(true),
 			view.Overview(statuses),
-			partial.Footer(timestamp),
+			partial.Footer(at),
 		),
 	})
+}
+
+func (s Srv) fetchAlertsCount(ctx context.Context, from string, at time.Time) (view.AlertsCount, error) {
+	cursor, err := db.Database(s.mongo).Collection("alerts").Find(ctx, bson.M{
+		"from":      from,
+		"timestamp": at,
+	})
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("finding alerts from %q at %v: %w", from, at, err)
+	}
+	defer cursor.Close(ctx)
+	count := make(view.AlertsCount, 3)
+	for cursor.Next(ctx) {
+		alerts := new(db.AlertDocument)
+		err := cursor.Decode(alerts)
+		if err != nil {
+			return nil, fmt.Errorf("decoding document at cursor: %w", err)
+		}
+		for _, alert := range alerts.Alerts {
+			count[alert.Severity]++
+		}
+	}
+	return count, nil
 }

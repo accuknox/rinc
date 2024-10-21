@@ -10,7 +10,7 @@ import "context"
 import "io"
 import "bytes"
 
-func Navbar(showLinks, roundedBottom bool) templ.Component {
+func Navbar(roundedBottom bool) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -50,17 +50,7 @@ func Navbar(showLinks, roundedBottom bool) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"flex-1\"><a href=\"/\" class=\"text-xl font-bold\"><img class=\"w-36\" src=\"/static/accuknox-logo.svg\" alt=\"AccuKnox Logo\"></a></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		if showLinks {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex-none\"><a href=\"/history\">History</a></div>")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</nav></header>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><div class=\"flex-1\"><a href=\"/\" class=\"text-xl font-bold\"><img class=\"w-36\" src=\"/static/accuknox-logo.svg\" alt=\"AccuKnox Logo\"></a></div></nav></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
