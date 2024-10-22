@@ -11,6 +11,7 @@ import (
 	types "github.com/accuknox/rinc/types/rabbitmq"
 	"github.com/accuknox/rinc/view"
 	"github.com/accuknox/rinc/view/layout"
+	"github.com/accuknox/rinc/view/partial"
 	tmpl "github.com/accuknox/rinc/view/rabbitmq"
 
 	"github.com/labstack/echo/v4"
@@ -27,6 +28,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					"failed to parse timestamp",
 					http.StatusBadRequest,
@@ -48,6 +50,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 				Ctx: c,
 				Component: layout.Base(
 					title,
+					partial.Navbar(false),
 					view.Error(
 						"Kindly make sure that the URL is correct",
 						http.StatusNotFound,
@@ -60,6 +63,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					err.Error(),
 					http.StatusInternalServerError,
@@ -75,6 +79,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					err.Error(),
 					http.StatusInternalServerError,
@@ -97,6 +102,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					err.Error(),
 					http.StatusInternalServerError,
@@ -119,6 +125,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					err.Error(),
 					http.StatusInternalServerError,
@@ -137,6 +144,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 				Ctx: c,
 				Component: layout.Base(
 					title,
+					partial.Navbar(false),
 					view.Error(
 						err.Error(),
 						http.StatusInternalServerError,
@@ -151,6 +159,7 @@ func (s Srv) RabbitMQ(c echo.Context) error {
 		Ctx: c,
 		Component: layout.Base(
 			title,
+			partial.Navbar(false),
 			tmpl.Report(*metrics, alerts.Alerts),
 		),
 	})

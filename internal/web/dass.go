@@ -12,6 +12,7 @@ import (
 	"github.com/accuknox/rinc/view"
 	tmpl "github.com/accuknox/rinc/view/dass"
 	"github.com/accuknox/rinc/view/layout"
+	"github.com/accuknox/rinc/view/partial"
 
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -27,6 +28,7 @@ func (s Srv) Dass(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					"failed to parse timestamp",
 					http.StatusBadRequest,
@@ -48,6 +50,7 @@ func (s Srv) Dass(c echo.Context) error {
 				Ctx: c,
 				Component: layout.Base(
 					title,
+					partial.Navbar(false),
 					view.Error(
 						"Kindly make sure that the URL is correct",
 						http.StatusNotFound,
@@ -60,6 +63,7 @@ func (s Srv) Dass(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					err.Error(),
 					http.StatusInternalServerError,
@@ -75,6 +79,7 @@ func (s Srv) Dass(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					err.Error(),
 					http.StatusInternalServerError,
@@ -97,6 +102,7 @@ func (s Srv) Dass(c echo.Context) error {
 			Ctx: c,
 			Component: layout.Base(
 				title,
+				partial.Navbar(false),
 				view.Error(
 					err.Error(),
 					http.StatusInternalServerError,
@@ -115,6 +121,7 @@ func (s Srv) Dass(c echo.Context) error {
 				Ctx: c,
 				Component: layout.Base(
 					title,
+					partial.Navbar(false),
 					view.Error(
 						err.Error(),
 						http.StatusInternalServerError,
@@ -129,6 +136,7 @@ func (s Srv) Dass(c echo.Context) error {
 		Ctx: c,
 		Component: layout.Base(
 			title,
+			partial.Navbar(false),
 			tmpl.Report(*metrics, alerts.Alerts),
 		),
 	})
