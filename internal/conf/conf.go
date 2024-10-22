@@ -16,8 +16,9 @@ var defaultConfig = "/etc/rinc/config.yaml"
 
 // C contains all configuration data that can be passed to the reporter.
 type C struct {
-	RunAsGenerator bool
+	RunAsScraper   bool
 	RunAsWebServer bool
+	GenerateSchema string
 	// Log contains configuration for logs.
 	Log Log `koanf:"log"`
 	// TerminationGracePeriod is the period after which the web server
@@ -63,12 +64,17 @@ func New(args ...string) (*C, error) {
 		return nil, fmt.Errorf("failed to parse flags: %w", err)
 	}
 
-	asGenerator, err := f.GetBool("generate-reports")
+	asScraper, err := f.GetBool("scrape")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse flags: %w", err)
 	}
 
 	asWebServer, err := f.GetBool("serve")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse flags: %w", err)
+	}
+
+	generateSchema, err := f.GetString("generate-schema")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse flags: %w", err)
 	}
@@ -84,8 +90,9 @@ func New(args ...string) (*C, error) {
 		return nil, fmt.Errorf("failed to unmarshal configuration: %w", err)
 	}
 
-	conf.RunAsGenerator = asGenerator
+	conf.RunAsScraper = asScraper
 	conf.RunAsWebServer = asWebServer
+	conf.GenerateSchema = generateSchema
 
 	return conf, nil
 }
@@ -97,7 +104,8 @@ func parseFlags(args []string) *flag.FlagSet {
 		os.Exit(0)
 	}
 	f.String("conf", defaultConfig, "path to config file")
-	f.Bool("generate-reports", false, "generate reports")
+	f.String("generate-schema", "", "generate json schema")
+	f.Bool("scrape", false, "scrape & store metrics")
 	f.Bool("serve", false, "serve static reports")
 	f.Parse(args)
 	return f

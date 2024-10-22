@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/accuknox/rinc/internal/db"
 	"github.com/accuknox/rinc/internal/job"
 	"github.com/accuknox/rinc/internal/kube"
+	"github.com/accuknox/rinc/internal/schema"
 	"github.com/accuknox/rinc/internal/web"
 )
 
@@ -21,6 +23,15 @@ func main() {
 	err = conf.Validate()
 	if err != nil {
 		log.Fatalf("validating provided config: %s", err.Error())
+	}
+
+	if conf.GenerateSchema != "" {
+		schema, err := schema.Generate(conf.GenerateSchema)
+		if err != nil {
+			log.Fatalf("generating schema: %s", err.Error())
+		}
+		fmt.Println(string(schema))
+		return
 	}
 
 	mongo, err := db.NewMongoDBClient(conf.Mongodb)
@@ -45,7 +56,7 @@ func main() {
 		)
 	}()
 
-	if conf.RunAsGenerator {
+	if conf.RunAsScraper {
 		kubeClient, err := kube.NewClient(conf.KubernetesClient)
 		if err != nil {
 			log.Fatalf("kubernetes client: %s", err.Error())
