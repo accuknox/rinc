@@ -38,6 +38,16 @@ rabbitmq:
     username: ""
     # basic auth password for the management api.
     password: ""
+  alerts:
+    - message: RabbitMQ unacked messages exceeded 1000
+      when: Overview.QueueTotals.UnacknowledgedMessages > 1000
+      severity: warning
+    - message: RabbitMQ ready messages exceeded 1000
+      when: Overview.QueueTotals.ReadyMessages > 1000
+      severity: warning
+    - message: One or more rabbitmq nodes are down
+      when: fieldsEq(Nodes, "Running", true) == false
+      severity: critical
 longRunningJobs:
   # enable long-running jobs reporting
   enable: false
@@ -50,17 +60,55 @@ longRunningJobs:
   olderThan: 24h
   # include long-running suspended jobs in reports
   includeSuspended: false
+  alerts: []
 imageTag:
   # enable image tag report
   enable: false
   # kubernetes namespace that the image tag reporter will be limited to.
   namespace: ""
+  alerts: []
 deploymentAndStatefulsetStatus:
   # enable deployment and statefulset status (DaSS) reporter
   enable: false
   # kubernetes namespace that the deployment and statefulset status (DaSS)
   # reporter will be limited to. Leave blank for all namespaces.
   namespace: ""
+  alerts:
+    - message: "CEPH S3 Object Gateway: one more pods are not ready"
+      when: |-
+        {
+          "x": findOneSubstr(findManySubstr(Deployments, "Namespace", "accuknox-ceph"), "Name", "s3")
+        } |
+        (x -> "ReadyReplicas") < (x -> "DesiredReplicas")
+      severity: warning
+    - message: "Metabase: one more pods are not ready"
+      when: |-
+        {
+          "x": findOneSubstr(Deployments, "Name", "metabase")
+        } |
+        (x -> "ReadyReplicas") < (x -> "DesiredReplicas")
+      severity: warning
+    - message: "Celery: one more pods are not ready"
+      when: |-
+        {
+          "x": findOneSubstr(Deployments, "Name", "celery")
+        } |
+        (x -> "ReadyReplicas") < (x -> "DesiredReplicas")
+      severity: warning
+    - message: "RabbitMQ: one more pods are not ready"
+      when: |-
+        {
+          "x": findOneSubstr(Statefulsets, "Name", "rabbitmq-server")
+        } |
+        (x -> "ReadyReplicas") < (x -> "DesiredReplicas")
+      severity: warning
+    - message: "MongoDB: one more pods are not up-to-date"
+      when: |-
+        {
+          "x": findOneSubstr(Statefulsets, "Name", "accuknox-mongodb-rs0")
+        } |
+        (x -> "UpdatedReplicas") < (x -> "ReadyReplicas")
+      severity: warning
 ceph:
   # enable ceph status reporter
   enable: false
@@ -74,3 +122,25 @@ ceph:
     username: ""
     # password to authenticate with ceph dashboard API.
     password: ""
+  alerts:
+    - message: Cluster is operating, but there are warnings that need attention
+      when: Status.Health.Status == "HEALTH_WARN"
+      severity: warning
+    - message: Cluster has errors that may impact functionality
+      when: Status.Health.Status == "HEALTH_ERR"
+      severity: critical
+    - message: Storage usage exceeded 70%
+      when: (Status.DF.Stats.TotalUsedBytes * 100) / Status.DF.Stats.TotalBytes > 70
+      severity: warning
+    - message: Storage usage exceeded 90%
+      when: (Status.DF.Stats.TotalUsedBytes * 100) / Status.DF.Stats.TotalBytes > 90
+      severity: critical
+    - message: One or more OSDs down
+      when: sumUint(Status.OSDMap.OSDs, "Up") != len(Status.OSDMap.OSDs)
+      severity: warning
+    - message: All OSDs are down
+      when: sumUint(Status.OSDMap.OSDs, "Up") == 0
+      severity: critical
+    - message: One or more OSDs are not part of data replication and recovery process
+      when: sumUint(Status.OSDMap.OSDs, "In") != len(Status.OSDMap.OSDs)
+      severity: warning

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/accuknox/rinc/internal/expr"
+
 	"github.com/PaesslerAG/gval"
 )
 
@@ -66,7 +68,7 @@ func (e *Expr) UnmarshalText(text []byte) error {
 		return nil
 	}
 	s := strings.TrimSpace(string(text))
-	ev, err := gval.Full().NewEvaluable(s)
+	ev, err := gval.Full(expr.Full()...).NewEvaluable(s)
 	if err != nil {
 		return fmt.Errorf("invalid expression %q: %w", s, err)
 	}
