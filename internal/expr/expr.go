@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/accuknox/rinc/types"
@@ -30,8 +31,8 @@ func Full() []gval.Language {
 		gval.Function("sumFloat64", Sum[float64]),
 		gval.Function("findOne", FindOne),
 		gval.Function("findMany", FindMany),
-		gval.Function("findOneSubstr", FindOneSubstr),
-		gval.Function("findManySubstr", FindManySubstr),
+		gval.Function("findOneRegex", FindOneRegex),
+		gval.Function("findManyRegex", FindManyRegex),
 		gval.InfixOperator("->", AccessOp),
 		gval.PostfixOperator("|", pipeOp),
 	}
@@ -136,11 +137,11 @@ func FindMany(list any, field string, value any) (any, error) {
 	return Find(list, field, value, &FindOpts{One: false})
 }
 
-func FindOneSubstr(list any, field string, value any) (any, error) {
+func FindOneRegex(list any, field string, value any) (any, error) {
 	return Find(list, field, value, &FindOpts{One: true, MatchAsStr: true})
 }
 
-func FindManySubstr(list any, field string, value any) (any, error) {
+func FindManyRegex(list any, field string, value any) (any, error) {
 	return Find(list, field, value, &FindOpts{One: false, MatchAsStr: true})
 }
 
@@ -203,7 +204,11 @@ func Find(list any, field string, value any, opts *FindOpts) (any, error) {
 				}
 			}
 			s := fval.String()
-			if !strings.Contains(s, vval.String()) {
+			regex, err := regexp.Compile(vval.String())
+			if err != nil {
+				return nil, fmt.Errorf("compiling regex %q: %w", vval.String(), err)
+			}
+			if !regex.MatchString(s) {
 				continue
 			}
 			matches = append(matches, item.Interface())
