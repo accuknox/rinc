@@ -84,28 +84,28 @@ deploymentAndStatefulsetStatus:
     - message: "Metabase: one more pods are not ready"
       when: |-
         {
-          "x": findOneRegex(Deployments, "Name", "metabase")
+          "x": findOneRegex(Deployments, "Name", "^metabase$")
         } |
         (x -> "ReadyReplicas") < (x -> "DesiredReplicas")
       severity: warning
     - message: "Celery: one more pods are not ready"
       when: |-
         {
-          "x": findOneRegex(Deployments, "Name", "celery")
+          "x": findOneRegex(Deployments, "Name", "^celery$")
         } |
         (x -> "ReadyReplicas") < (x -> "DesiredReplicas")
       severity: warning
     - message: "RabbitMQ: one more pods are not ready"
       when: |-
         {
-          "x": findOneRegex(Statefulsets, "Name", "rabbitmq-server")
+          "x": findOneRegex(Statefulsets, "Name", "^rabbitmq-server$")
         } |
         (x -> "ReadyReplicas") < (x -> "DesiredReplicas")
       severity: warning
     - message: "MongoDB: one more pods are not up-to-date"
       when: |-
         {
-          "x": findOneRegex(Statefulsets, "Name", "accuknox-mongodb-rs0")
+          "x": findOneRegex(Statefulsets, "Name", "^accuknox-mongodb-rs0$")
         } |
         (x -> "UpdatedReplicas") < (x -> "ReadyReplicas")
       severity: warning
