@@ -59,7 +59,7 @@ func New(args ...string) (*C, error) {
 	}
 
 	f := parseFlags(args)
-	confF, err := f.GetString("conf")
+	confF, err := f.GetStringSlice("conf")
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse flags: %w", err)
 	}
@@ -79,9 +79,11 @@ func New(args ...string) (*C, error) {
 		return nil, fmt.Errorf("failed to parse flags: %w", err)
 	}
 
-	err = k.Load(file.Provider(confF), yaml.Parser())
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config file: %w", err)
+	for _, c := range confF {
+		err := k.Load(file.Provider(c), yaml.Parser())
+		if err != nil {
+			return nil, fmt.Errorf("failed to load config %q: %w", c, err)
+		}
 	}
 
 	conf := new(C)
@@ -103,7 +105,7 @@ func parseFlags(args []string) *flag.FlagSet {
 		fmt.Print(f.FlagUsages())
 		os.Exit(0)
 	}
-	f.String("conf", defaultConfig, "path to config file")
+	f.StringSlice("conf", []string{defaultConfig}, "comma-seperated list of config files")
 	f.String("generate-schema", "", "generate json schema")
 	f.Bool("scrape", false, "scrape & store metrics")
 	f.Bool("serve", false, "serve static reports")
