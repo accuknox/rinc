@@ -79,3 +79,25 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
     {{- .Chart.Name | trunc 63 | trimSuffix "-" }}
   {{- end }}
 {{- end }}
+
+{{- define "secret.name" -}}
+  {{- if .Values.existingSecret.name }}
+    {{- .Values.existingSecret.name }}
+  {{- else if .Values.secretConfig.create }}
+    {{- if .Values.secretConfig.fullnameOverride }}
+      {{- .Values.secretConfig.fullnameOverride | trunc 63 | trimSuffix "-" }}
+    {{- else if .Values.secretConfig.nameOverride }}
+      {{- printf "%s-%s" .Chart.Name .Values.secretConfig.nameOverride | trunc 63 | trimSuffix "-" }}
+    {{- else }}
+      {{- .Chart.Name | trunc 63 | trimSuffix "-" }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- define "secret.key" -}}
+  {{- if .Values.existingSecret.name }}
+    {{- .Values.existingSecret.key }}
+  {{- else if .Values.secretConfig.create }}
+    {{- printf "secret.yaml" }}
+  {{- end }}
+{{- end }}

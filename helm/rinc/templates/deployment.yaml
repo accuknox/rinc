@@ -41,6 +41,12 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --serve
+            {{- if or .Values.existingSecret.name .Values.secretConfig.create }}
+            - --conf
+            - /etc/rinc/config.yaml,/etc/rinc/secret.yaml
+            {{- end }}
           ports:
             - name: http
               containerPort: 8080
@@ -52,15 +58,24 @@ spec:
               readOnly: true
               mountPath: /etc/rinc/config.yaml
               subPath: config.yaml
-          {{- with .Values.web.additionalVolumeMounts }}
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- if or .Values.existingSecret.name .Values.secretConfig.create }}
+            - name: {{ include "secret.name" . }}
+              readOnly: true
+              mountPath: /etc/rinc/secret.yaml
+              subPath: secret.yaml
+            {{- end }}
       volumes:
         - name: {{ include "configMap.name" . }}
           configMap:
             name: {{ include "configMap.name" . }}
             optional: false
-      {{- with .Values.web.additionalVolumes }}
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if or .Values.existingSecret.name .Values.secretConfig.create }}
+        - name: {{ include "secret.name" . }}
+          secret:
+            secretName: {{ include "secret.name" . }}
+            optional: false
+            items:
+              - key: {{ include "secret.key" . }}
+                path: "secret.yaml"
+        {{- end }}
       restartPolicy: {{ .Values.web.restartPolicy | default "Always" }}
