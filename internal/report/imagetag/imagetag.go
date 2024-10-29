@@ -139,10 +139,16 @@ func (r Reporter) deployments(ctx context.Context) ([]types.Resource, error) {
 		}
 
 		for _, d := range depls.Items {
-			containers := d.Spec.Template.Spec.Containers
-			images := make([]string, len(containers))
+			containers := append(
+				d.Spec.Template.Spec.InitContainers,
+				d.Spec.Template.Spec.Containers...,
+			)
+			images := make([]types.Image, len(containers))
 			for idx, c := range containers {
-				images[idx] = c.Image
+				images[idx] = types.Image{
+					Name:              c.Image,
+					FromInitContainer: idx < len(d.Spec.Template.Spec.InitContainers),
+				}
 			}
 			resources = append(resources, types.Resource{
 				Name:      d.GetName(),
@@ -190,10 +196,16 @@ func (r Reporter) statefulsets(ctx context.Context) ([]types.Resource, error) {
 		}
 
 		for _, s := range ss.Items {
-			containers := s.Spec.Template.Spec.Containers
-			images := make([]string, len(containers))
+			containers := append(
+				s.Spec.Template.Spec.InitContainers,
+				s.Spec.Template.Spec.Containers...,
+			)
+			images := make([]types.Image, len(containers))
 			for idx, c := range containers {
-				images[idx] = c.Image
+				images[idx] = types.Image{
+					Name:              c.Image,
+					FromInitContainer: idx < len(s.Spec.Template.Spec.InitContainers),
+				}
 			}
 			resources = append(resources, types.Resource{
 				Name:      s.GetName(),

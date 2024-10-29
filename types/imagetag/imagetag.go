@@ -11,5 +11,10 @@ type Metrics struct {
 type Resource struct {
 	Name      string
 	Namespace string
-	Images    []string
+	Images    []Image
+}
+
+type Image struct {
+	Name              string
+	FromInitContainer bool
 }

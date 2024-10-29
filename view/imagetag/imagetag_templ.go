@@ -158,13 +158,23 @@ func resource(name string, resources []types.Resource) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var8 string
-				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(image)
+				templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(image.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/imagetag/imagetag.templ`, Line: 41, Col: 20}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/imagetag/imagetag.templ`, Line: 42, Col: 22}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" ")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				if image.FromInitContainer {
+					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<strong>(init)</strong>")
+					if templ_7745c5c3_Err != nil {
+						return templ_7745c5c3_Err
+					}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li>")
 				if templ_7745c5c3_Err != nil {

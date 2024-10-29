@@ -38,7 +38,12 @@ templ resource(name string, resources []types.Resource) {
 						<td>
 							<ul>
 								for _, image := range r.Images {
-									<li>{ image }</li>
+									<li>
+										{ image.Name }
+										if image.FromInitContainer {
+											<strong>(init)</strong>
+										}
+									</li>
 								}
 							</ul>
 						</td>
