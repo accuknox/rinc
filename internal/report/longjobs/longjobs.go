@@ -13,7 +13,9 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -71,6 +73,59 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 			if !old {
 				continue
 			}
+			podList, err := r.pods(ctx, job.Namespace, job.Spec.Selector.MatchLabels)
+			if err != nil {
+				slog.LogAttrs(
+					ctx,
+					slog.LevelError,
+					"listing pods",
+					slog.String("kind", job.Kind),
+					slog.String("for", job.Name),
+					slog.String("namespace", job.Namespace),
+					slog.String("error", err.Error()),
+				)
+				continue
+			}
+			pods := make([]types.Pod, len(podList.Items))
+			for idx, pod := range podList.Items {
+				var phase string
+				switch pod.Status.Phase {
+				case corev1.PodPending:
+					phase = "Pending"
+				case corev1.PodRunning:
+					phase = "Running"
+				case corev1.PodSucceeded:
+					phase = "Succeeded"
+				case corev1.PodFailed:
+					phase = "Failed"
+				case corev1.PodUnknown:
+					phase = "Unknown"
+				}
+				var containers []types.Container
+				for _, c := range pod.Status.InitContainerStatuses {
+					containers = append(containers, types.Container{
+						Name:         c.Name,
+						IsInit:       true,
+						Ready:        c.Ready,
+						RestartCount: c.RestartCount,
+						State:        containerState(c.State),
+					})
+				}
+				for _, c := range pod.Status.ContainerStatuses {
+					containers = append(containers, types.Container{
+						Name:         c.Name,
+						Ready:        c.Ready,
+						RestartCount: c.RestartCount,
+						State:        containerState(c.State),
+					})
+				}
+				pods[idx] = types.Pod{
+					Name:       pod.Name,
+					Phase:      phase,
+					Reason:     pod.Status.Reason,
+					Containers: containers,
+				}
+			}
 			var readyPods int32
 			if job.Status.Ready != nil {
 				readyPods = *job.Status.Ready
@@ -83,6 +138,7 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 				FailedPods: job.Status.Failed,
 				ReadyPods:  readyPods,
 				Age:        time.Now().UTC().Sub(job.CreationTimestamp.UTC()),
+				Pods:       pods,
 			})
 			slog.LogAttrs(
 				ctx,
@@ -161,4 +217,25 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 	)
 
 	return nil
+}
+
+func (r Reporter) pods(ctx context.Context, ns string, labels labels.Set) (*corev1.PodList, error) {
+	selector := metav1.FormatLabelSelector(metav1.SetAsLabelSelector(labels))
+	return r.kubeClient.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{
+		LabelSelector: selector,
+	})
+}
+
+func containerState(s corev1.ContainerState) string {
+	if s.Running != nil {
+		return "RUNNING"
+	}
+	out := "%s: Reason=%s"
+	if s.Waiting != nil {
+		return fmt.Sprintf(out, "WAITING", s.Waiting.Reason)
+	}
+	if s.Terminated != nil {
+		return fmt.Sprintf(out, "TERMINATED", s.Terminated.Reason)
+	}
+	return ""
 }

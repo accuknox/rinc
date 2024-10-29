@@ -35,6 +35,7 @@ templ jobs(jobs []types.Job, olderThan time.Duration) {
 				<th>Failed Pods</th>
 				<th>Ready Pods</th>
 				<th>Age</th>
+				<th>Pods</th>
 			</thead>
 			<tbody>
 				for _, job := range jobs {
@@ -46,6 +47,50 @@ templ jobs(jobs []types.Job, olderThan time.Duration) {
 						<td>{ fmt.Sprintf("%d", job.FailedPods) }</td>
 						<td>{ fmt.Sprintf("%d", job.ReadyPods) }</td>
 						<td>{ job.Age.Round(time.Second).String() }</td>
+						<td>
+							<table class="full-width-table nested-table">
+								<thead>
+									<th>Name</th>
+									<th>Phase</th>
+									<th>Reason</th>
+									<th>Containers</th>
+								</thead>
+								<tbody>
+									for _, pod := range job.Pods {
+										<tr>
+											<td>{ pod.Name }</td>
+											<td>{ pod.Phase }</td>
+											<td>{ pod.Reason }</td>
+											<td>
+												<table class="full-width-table nested-table">
+													<thead>
+														<th>Name</th>
+														<th>Ready</th>
+														<th>State</th>
+														<th>Restart Count</th>
+													</thead>
+													<tbody>
+														for _, c := range pod.Containers {
+															<tr>
+																<td>
+																	{ c.Name }
+																	if c.IsInit {
+																		(init)
+																	}
+																</td>
+																<td>{ fmt.Sprintf("%v", c.Ready) }</td>
+																<td>{ c.State }</td>
+																<td>{ fmt.Sprintf("%d", c.RestartCount) }</td>
+															</tr>
+														}
+													</tbody>
+												</table>
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</td>
 					</tr>
 				}
 			</tbody>
