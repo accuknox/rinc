@@ -3,7 +3,7 @@ image:
   repository: 956994857092.dkr.ecr.us-east-2.amazonaws.com/accuknox-rinc
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "v0.2.0"
 
 imagePullSecrets: []
 
@@ -88,6 +88,8 @@ config:
   log:
     level: "info"  # possible values: "debug", "info", "warn", "error"
     format: "text" # possible values: "text", "json"
+  mongodb:
+    uri: ""
   rabbitmq:
     # enable rabbitmq metrics and stats in the reports.
     enable: false
@@ -146,7 +148,6 @@ secretConfig:
   fullnameOverride: ""
   config:
     mongodb:
-      uri: ""
       username: ""
       password: ""
     rabbitmq:
