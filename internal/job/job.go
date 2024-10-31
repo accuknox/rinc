@@ -34,7 +34,6 @@ func New(c conf.C, k *kubernetes.Clientset, mongo *mongo.Client) Job {
 // GenerateAll generates reports for all the configured tasks.
 func (j Job) GenerateAll(ctx context.Context) error {
 	now := time.Now().UTC().Round(time.Second)
-	stamp := now.Format(util.IsosecLayout)
 
 	if j.conf.RabbitMQ.Enable {
 		err := j.GenerateRMQReport(ctx, now)

@@ -1,0 +1,79 @@
+name: goreleaser
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Make sure all tests succeed
+        run: CGO_ENABLED=1 go test --race -v ./...
+  goreleaser:
+    needs: unit-tests
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Run Goreleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          # 'latest', 'nightly', or a semver
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  docker:
+    needs: unit-tests
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: "${{ secrets.AWS_ECR_REGISTRY }}/accuknox-rinc"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to AWS ECR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.AWS_ECR_REGISTRY }}
+          username: ${{ secrets.AWS_DEV_ACCESS_ID }}
+          password: ${{ secrets.AWS_DEV_SECRET_ID }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
