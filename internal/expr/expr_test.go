@@ -15,6 +15,7 @@ type data struct {
 	list     any
 	field    string
 	value    any
+	expr     string
 	wantErr  bool
 	wantNil  bool
 	wantBool bool
@@ -115,6 +116,8 @@ func TestLen(t *testing.T) {
 }
 
 type testStruct struct {
+	X    int
+	Y    int
 	Foo  string
 	Bar  int
 	Blah bool
@@ -422,6 +425,68 @@ func TestFindOneMatchStr(t *testing.T) {
 			continue
 		}
 		a.NotNil(got, msg...)
+	}
+}
+
+func TestEvalOnEach(t *testing.T) {
+	a := assert.New(t)
+	inputs := []data{
+		{
+			list: []testStruct{
+				{X: 10, Y: 20, Foo: "idx=0"},
+				{X: 0, Y: 20, Foo: "idx=1"},
+				{X: 30, Y: 20, Foo: "idx=2"},
+				{X: 10, Y: 10, Foo: "idx=3"},
+			},
+			field:   "Foo",
+			expr:    "X < Y",
+			wantInt: 2,
+		},
+		{
+			list: []testStruct{
+				{X: 10, Y: 20, Foo: "idx=0"},
+				{X: 0, Y: 20, Foo: "idx=1"},
+				{X: 30, Y: 20, Foo: "idx=2"},
+				{X: 10, Y: 10, Foo: "idx=3"},
+			},
+			field:   "Foo",
+			expr:    "X == Y",
+			wantInt: 1,
+		},
+		{
+			list: []testStruct{
+				{X: 10, Y: 20, Foo: "idx=0"},
+				{X: 0, Y: 20, Foo: "idx=1"},
+				{X: 30, Y: 20, Foo: "idx=2"},
+				{X: 10, Y: 10, Foo: "idx=3"},
+			},
+			field:   "Foo",
+			expr:    "X <= Y",
+			wantInt: 3,
+		},
+		{
+			list: []testStruct{
+				{X: 10, Y: 20, Foo: "idx=0"},
+				{X: 0, Y: 20, Foo: "idx=1"},
+				{X: 30, Y: 20, Foo: "idx=2"},
+				{X: 10, Y: 10, Foo: "idx=3"},
+			},
+			field:   "Foo",
+			expr:    "Z <= Y",
+			wantErr: true,
+		},
+	}
+	for _, i := range inputs {
+		got, err := expr.EvalOnEach(i.list, i.expr, i.field)
+		msg := []any{"list=%v expr=%s ret=%s", i.list, i.expr, i.field}
+		if i.wantErr {
+			a.Error(err, msg...)
+			continue
+		}
+		a.NoError(err, msg...)
+		gotVal := reflect.ValueOf(got)
+		a.Equal(reflect.Slice, gotVal.Kind(), msg)
+		a.Equal(i.wantInt, gotVal.Len(), msg)
 	}
 }
 

@@ -33,6 +33,7 @@ func Full() []gval.Language {
 		gval.Function("findMany", FindMany),
 		gval.Function("findOneRegex", FindOneRegex),
 		gval.Function("findManyRegex", FindManyRegex),
+		gval.Function("evalOnEach", EvalOnEach),
 		gval.InfixOperator("->", AccessOp),
 		gval.PostfixOperator("|", pipeOp),
 	}
@@ -227,6 +228,54 @@ func Find(list any, field string, value any, opts *FindOpts) (any, error) {
 	}
 
 	return matches, nil
+}
+
+func EvalOnEach(list any, expr, ret string) (any, error) {
+	rlist := reflect.ValueOf(list)
+	if rlist.Kind() != reflect.Slice && rlist.Kind() != reflect.Array {
+		return nil, ErrUnexpectedKind[string]{
+			arg:  0,
+			want: fmt.Sprintf("%s|%s", reflect.Array, reflect.Slice),
+			got:  rlist.Kind().String(),
+		}
+	}
+
+	var postivies []any
+
+	for idx := 0; idx < rlist.Len(); idx++ {
+		item := reflect.ValueOf(rlist.Index(idx).Interface())
+		if item.Kind() == reflect.Ptr {
+			item = item.Elem()
+		}
+		if item.Kind() != reflect.Struct {
+			return nil, ErrUnexpectedKind[reflect.Kind]{
+				arg:  "list[] -> item",
+				want: reflect.Struct,
+				got:  item.Kind(),
+			}
+		}
+		ev, err := gval.Full(Full()...).NewEvaluable(expr)
+		if err != nil {
+			return nil, fmt.Errorf("parsing expression %q: %w", expr, err)
+		}
+		isTrue, err := ev.EvalBool(context.TODO(), item.Interface())
+		if err != nil {
+			return nil, fmt.Errorf("evaluating expr %q: %w", expr, err)
+		}
+		if !isTrue {
+			continue
+		}
+		fval := item.FieldByName(ret)
+		if !fval.IsValid() {
+			return nil, ErrFieldNotExist{
+				field: ret,
+				on:    "list(arg 0)",
+			}
+		}
+		postivies = append(postivies, fval.Interface())
+	}
+
+	return postivies, nil
 }
 
 func Sum[T types.Number](list any, field string) (T, error) {

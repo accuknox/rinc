@@ -1,7 +1,6 @@
 package report
 
 import (
-	"bytes"
 	"context"
 	"log/slog"
 
@@ -31,19 +30,19 @@ func SoftEvaluateAlerts(ctx context.Context, alerts []conf.Alert, data any) []db
 		if !fire {
 			continue
 		}
-		msg := new(bytes.Buffer)
-		if err := alert.Message.Execute(msg, data); err != nil {
+		msg, err := alert.Message.Evaluate(ctx, data)
+		if err != nil {
 			slog.LogAttrs(
 				ctx,
 				slog.LevelError,
-				"evaluating message template",
+				"evaluating message expression",
 				slog.String("error", err.Error()),
-				slog.String("message", alert.Message.Raw),
+				slog.String("message", alert.Message.Text),
 			)
 			continue
 		}
 		firing = append(firing, db.Alert{
-			Message:  msg.String(),
+			Message:  msg,
 			Severity: alert.Severity,
 		})
 	}
