@@ -47,12 +47,6 @@ func (j Job) GenerateAll(ctx context.Context) error {
 			)
 			return fmt.Errorf("generating RMQ report: %w", err)
 		}
-		slog.LogAttrs(
-			ctx,
-			slog.LevelInfo,
-			"generated rabbitmq.html",
-			slog.String("stamp", stamp),
-		)
 	}
 
 	if j.conf.LongJobs.Enable {
@@ -66,12 +60,6 @@ func (j Job) GenerateAll(ctx context.Context) error {
 			)
 			return fmt.Errorf("generating long running jobs report: %w", err)
 		}
-		slog.LogAttrs(
-			ctx,
-			slog.LevelInfo,
-			"generated longrunningjobs.html",
-			slog.String("stamp", stamp),
-		)
 	}
 
 	if j.conf.ImageTag.Enable {
@@ -85,12 +73,6 @@ func (j Job) GenerateAll(ctx context.Context) error {
 			)
 			return fmt.Errorf("generating image tag report: %w", err)
 		}
-		slog.LogAttrs(
-			ctx,
-			slog.LevelInfo,
-			"generated imagetag.html",
-			slog.String("stamp", stamp),
-		)
 	}
 
 	if j.conf.DaSS.Enable {
@@ -104,12 +86,6 @@ func (j Job) GenerateAll(ctx context.Context) error {
 			)
 			return fmt.Errorf("generating DaSS report: %w", err)
 		}
-		slog.LogAttrs(
-			ctx,
-			slog.LevelInfo,
-			"generated deployment-statefulset-status.html",
-			slog.String("stamp", stamp),
-		)
 	}
 
 	if j.conf.Ceph.Enable {
@@ -123,12 +99,6 @@ func (j Job) GenerateAll(ctx context.Context) error {
 			)
 			return fmt.Errorf("generating ceph status report: %w", err)
 		}
-		slog.LogAttrs(
-			ctx,
-			slog.LevelInfo,
-			"generated ceph.html",
-			slog.String("stamp", stamp),
-		)
 	}
 
 	return nil
