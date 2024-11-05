@@ -25,6 +25,8 @@ on:
         required: true
         description: "sonarqube project base key"
       pushToSaas:
+        type: boolean
+        default: false
         required: false
         description: "push sonarqube report to AccuKnox SaaS"
       ak_url:
@@ -55,27 +57,27 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Run AccuKnox SAST job
-        if: ${{ inputs.pushToSaas }} == 'true' && ${{ inputs.project_key }}
+        if: ${{ inputs.pushToSaas && inputs.projectKey }}
         run: |
           docker run --rm \
-              -e SQ_URL=${{ inputs.sonar_host_url }} \
-              -e SQ_AUTH_TOKEN=${{ inputs.token }} \
+              -e SQ_URL=${{ github.event.inputs.sonar_host_url }} \
+              -e SQ_AUTH_TOKEN=${{ github.event.inputs.token }} \
               -e REPORT_PATH=/app/data/ \
-              -e SQ_PROJECTS="^${{ inputs.project_key }}$" \
+              -e SQ_PROJECTS="^${{ github.event.inputs.projectKey }}$" \
               -v $PWD:/app/data/ \
               accuknox/sastjob:latest
         shell: bash
 
       - name: Upload SAST reports
-        if: ${{ inputs.pushToSaas }} == 'true' && ${{ inputs.project_key }}
+        if: ${{ inputs.pushToSaas && inputs.projectKey }}
         run: |
           cd ${GITHUB_WORKSPACE}
           for file in `ls -1 SQ-*.json`; do
               curl --location \
                   --request POST \
-                  --header "Tenant-Id: ${{ inputs.tenant_id }}" \
-                  --header "Authorization: Bearer ${{ inputs.ak_tok }}" \
+                  --header "Tenant-Id: ${{ github.event.inputs.tenant_id }}" \
+                  --header "Authorization: Bearer ${{ github.event.inputs.ak_tok }}" \
                   --form "file=@\"$file\"" \
-                  "https://${{ inputs.ak_url }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=SQ&label_id=${{ inputs.label }}&save_to_s3=false"
+                  "https://${{ github.event.inputs.ak_url }}/api/v1/artifact/?tenant_id=${{ github.event.inputs.tenant_id }}&data_type=SQ&label_id=${{ github.event.inputs.label }}&save_to_s3=false"
           done
         shell: bash
