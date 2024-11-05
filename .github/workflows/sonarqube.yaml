@@ -55,7 +55,7 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
       - name: Run AccuKnox SAST job
-        if: ${{ inputs.pushToSaas == 'true' && inputs.project_key }}
+        if: ${{ inputs.pushToSaas }} == 'true' && ${{ inputs.project_key }}
         run: |
           docker run --rm \
               -e SQ_URL=${{ inputs.sonar_host_url }} \
@@ -67,7 +67,7 @@ jobs:
         shell: bash
 
       - name: Upload SAST reports
-        if: ${{ inputs.pushToSaas == 'true' && inputs.project_key }}
+        if: ${{ inputs.pushToSaas }} == 'true' && ${{ inputs.project_key }}
         run: |
           cd ${GITHUB_WORKSPACE}
           for file in `ls -1 SQ-*.json`; do
