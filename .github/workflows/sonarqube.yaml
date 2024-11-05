@@ -4,6 +4,49 @@ on:
   push:
     branches:
       - main
+    workflow_dispatch:
+      inputs:
+        host:
+          type: string
+          required: true
+          description: "sonarqube host"
+          default: "https://sq.accuknox.com"
+        token:
+          type: string
+          required: true
+          description: "sonarqube token"
+        projectBaseDir:
+          type: string
+          required: true
+          description: "sonarqube project base directory"
+          default: "."
+        projectKey:
+          type: string
+          required: true
+          description: "sonarqube project base key"
+        args:
+          type: string
+          required: true
+          description: "sonarqube args"
+        qualityGateCheck:
+          type: string
+          required: true
+          description: "sonarqube quality gate check"
+        pushToSaas:
+          required: false
+          description: "push sonarqube report to AccuKnox SaaS"
+        ak_url:
+          description: "AccuKnox SaaS URL for uploading the reports."
+          required: false
+        tenant_id:
+          description: "The ID of the tenant associated with the CSPM dashboard."
+          required: false
+        ak_tok:
+          description: "The token for authenticating with AccuKnox SaaS."
+          required: false
+        label:
+          description: "Label created in AccuKnox SaaS for associating the scan results."
+          required: false
 
 jobs:
   build:
@@ -13,7 +56,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # shallow clones should be disabled for a better relevancy of analysis
+
       - uses: sonarsource/sonarqube-scan-action@v3.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Run AccuKnox SAST job
+        if: ${{ github.event.inputs.pushToSaas == 'true' && github.event.inputs.project_key }}
+        run: |
+          docker run --rm \
+              -e SQ_URL=${{ inputs.sonar_host_url }} \
+              -e SQ_AUTH_TOKEN=${{ inputs.token }} \
+              -e REPORT_PATH=/app/data/ \
+              -e SQ_PROJECTS="^${{ github.event.inputs.project_key }}$" \
+              -v $PWD:/app/data/ \
+              accuknox/sastjob:latest
+        shell: bash
+
+      - name: Upload SAST reports
+        if: ${{ github.event.inputs.pushToSaas == 'true' && github.event.inputs.project_key }}
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          for file in `ls -1 SQ-*.json`; do
+              curl --location \
+                  --request POST \
+                  --header "Tenant-Id: ${{ inputs.tenant_id }}" \
+                  --header "Authorization: Bearer ${{ inputs.ak_tok }}" \
+                  --form "file=@\"$file\"" \
+                  "https://${{ inputs.ak_url }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=SQ&label_id=${{ inputs.label }}&save_to_s3=false"
+          done
+        shell: bash
