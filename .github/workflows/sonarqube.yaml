@@ -72,12 +72,13 @@ jobs:
         if: ${{ inputs.pushToSaas && inputs.projectKey }}
         run: |
           cd ${GITHUB_WORKSPACE}
+          echo "https://${{ github.event.inputs.ak_url }}/api/v1/artifact/?tenant_id=${{ github.event.inputs.tenant_id }}&data_type=SQ&label_id=${{ github.event.inputs.label }}&save_to_s3=false"
           for file in `ls -1 SQ-*.json`; do
-              curl --location \
-                  --request POST \
-                  --header "Tenant-Id: ${{ github.event.inputs.tenant_id }}" \
-                  --header "Authorization: Bearer ${{ github.event.inputs.ak_tok }}" \
-                  --form "file=@\"$file\"" \
+              curl -L \
+                  -X POST \
+                  -H "Tenant-Id: ${{ github.event.inputs.tenant_id }}" \
+                  -H "Authorization: Bearer ${{ github.event.inputs.ak_tok }}" \
+                  -F "file=@$file" \
                   "https://${{ github.event.inputs.ak_url }}/api/v1/artifact/?tenant_id=${{ github.event.inputs.tenant_id }}&data_type=SQ&label_id=${{ github.event.inputs.label }}&save_to_s3=false"
           done
         shell: bash
