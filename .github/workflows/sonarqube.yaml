@@ -4,49 +4,49 @@ on:
   push:
     branches:
       - main
-    workflow_dispatch:
-      inputs:
-        host:
-          type: string
-          required: true
-          description: "sonarqube host"
-          default: "https://sq.accuknox.com"
-        token:
-          type: string
-          required: true
-          description: "sonarqube token"
-        projectBaseDir:
-          type: string
-          required: true
-          description: "sonarqube project base directory"
-          default: "."
-        projectKey:
-          type: string
-          required: true
-          description: "sonarqube project base key"
-        args:
-          type: string
-          required: true
-          description: "sonarqube args"
-        qualityGateCheck:
-          type: string
-          required: true
-          description: "sonarqube quality gate check"
-        pushToSaas:
-          required: false
-          description: "push sonarqube report to AccuKnox SaaS"
-        ak_url:
-          description: "AccuKnox SaaS URL for uploading the reports."
-          required: false
-        tenant_id:
-          description: "The ID of the tenant associated with the CSPM dashboard."
-          required: false
-        ak_tok:
-          description: "The token for authenticating with AccuKnox SaaS."
-          required: false
-        label:
-          description: "Label created in AccuKnox SaaS for associating the scan results."
-          required: false
+  workflow_dispatch:
+    inputs:
+      host:
+        type: string
+        required: true
+        description: "sonarqube host"
+        default: "https://sq.accuknox.com"
+      token:
+        type: string
+        required: true
+        description: "sonarqube token"
+      projectBaseDir:
+        type: string
+        required: true
+        description: "sonarqube project base directory"
+        default: "."
+      projectKey:
+        type: string
+        required: true
+        description: "sonarqube project base key"
+      args:
+        type: string
+        required: true
+        description: "sonarqube args"
+      qualityGateCheck:
+        type: string
+        required: true
+        description: "sonarqube quality gate check"
+      pushToSaas:
+        required: false
+        description: "push sonarqube report to AccuKnox SaaS"
+      ak_url:
+        description: "AccuKnox SaaS URL for uploading the reports."
+        required: false
+      tenant_id:
+        description: "The ID of the tenant associated with the CSPM dashboard."
+        required: false
+      ak_tok:
+        description: "The token for authenticating with AccuKnox SaaS."
+        required: false
+      label:
+        description: "Label created in AccuKnox SaaS for associating the scan results."
+        required: false
 
 jobs:
   build:
