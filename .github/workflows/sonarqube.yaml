@@ -60,7 +60,7 @@ jobs:
         if: ${{ inputs.pushToSaas && inputs.projectKey }}
         run: |
           docker run --rm \
-              -e SQ_URL=${{ github.event.inputs.sonar_host_url }} \
+              -e SQ_URL=${{ github.event.inputs.host }} \
               -e SQ_AUTH_TOKEN=${{ github.event.inputs.token }} \
               -e REPORT_PATH=/app/data/ \
               -e SQ_PROJECTS="^${{ github.event.inputs.projectKey }}$" \
