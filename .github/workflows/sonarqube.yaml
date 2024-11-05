@@ -24,14 +24,6 @@ on:
         type: string
         required: true
         description: "sonarqube project base key"
-      args:
-        type: string
-        required: true
-        description: "sonarqube args"
-      qualityGateCheck:
-        type: string
-        required: true
-        description: "sonarqube quality gate check"
       pushToSaas:
         required: false
         description: "push sonarqube report to AccuKnox SaaS"
