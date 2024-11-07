@@ -20,7 +20,7 @@ jobs:
         with:
           fetch-depth: 0 # shallow clones should be disabled for a better relevancy of analysis
 
-      - uses: accuknox/common-gh-actions/actions/sonarqube@0f98b34cad2414e7cfb2a076aee2bc18d337a2f2
+      - uses: accuknox/common-gh-actions/actions/sonarqube@b9cccae8cdc173e027856652025820421a65b0f3
         with:
           host: "https://sq.accuknox.com"
           token: ${{ secrets.SQ_TOKEN }}
@@ -29,7 +29,7 @@ jobs:
             -Dsonar.projectKey=${{ env.SQ_PROJECT_KEY }}
             -Dsonar.sources=.
           projectKey: ${{ env.SQ_PROJECT_KEY  }}
-          pushToSaas: true
+          pushToSaas: false
           ak_url: ${{ env.AK_URL }}
           ak_tok: ${{ secrets.AK_PROD_ACCUKNOXTECH_TOKEN }}
           tenant_id: ${{ secrets.AK_PROD_ACCUKNOXTECH_TENANT_ID }}
