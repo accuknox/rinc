@@ -29,7 +29,7 @@ jobs:
             -Dsonar.projectKey=${{ env.SQ_PROJECT_KEY }}
             -Dsonar.sources=.
           projectKey: ${{ env.SQ_PROJECT_KEY  }}
-          pushToSaas: false
+          pushToSaas: true
           ak_url: ${{ env.AK_URL }}
           ak_tok: ${{ secrets.AK_PROD_ACCUKNOXTECH_TOKEN }}
           tenant_id: ${{ secrets.AK_PROD_ACCUKNOXTECH_TENANT_ID }}
