@@ -20,7 +20,7 @@ jobs:
         with:
           fetch-depth: 0 # shallow clones should be disabled for a better relevancy of analysis
 
-      - uses: accuknox/common-gh-actions/actions/sonarqube@eee23079f901642ddcc4e05e57b3a9e16deea000
+      - uses: accuknox/common-gh-actions/actions/sonarqube@0f98b34cad2414e7cfb2a076aee2bc18d337a2f2
         with:
           host: "https://sq.accuknox.com"
           token: ${{ secrets.SQ_TOKEN }}
