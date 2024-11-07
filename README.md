@@ -13,6 +13,10 @@ RINC (short for "Reporting IN Cluster") is a simple and lightweight reporting to
 
 > Please note that RINC is still in its early stages of development and is **not** feature complete.
 
+## Architecture
+
+![](./architecture.png)
+
 ## Supported Reports
 
 * Kubernetes deployment and statefulset status reports
@@ -60,8 +64,8 @@ Definition: `has(x: array|string, y: any|string)`
 
 Parameters:
 
-	* x: Can be a string or array.
-    * y: The value to check for within x.
+* x: Can be a string or array.
+* y: The value to check for within x.
 
 Returns: bool
 
@@ -73,7 +77,7 @@ Definition: `len(x: array|string)`
 
 Parameters:
 
-	* x: Any supported type (string, array, map).
+* x: Any supported type (string, array, map).
 
 Returns: int
 
@@ -85,9 +89,9 @@ Definition: `fieldsEq(list: array, field: string, value: any)`
 
 Parameters:
 
-	* list: Array of structs.
-	* field: Name of the struct field to compare.
-	* value: The value to check for equality with each struct’s field.
+* list: Array of structs.
+* field: Name of the struct field to compare.
+* value: The value to check for equality with each struct’s field.
 
 Returns: bool
 
@@ -97,23 +101,23 @@ These functions search an array of structs for items with a field matching a spe
 
 Definition:
 
-	* `findOne(list: array, field: string, value: any)`
-	* `findMany(list: array, field: string, value: any)`
-	* `findOneRegex(list: array, field: string, value: stringRegex)`
-	* `findManyRegex(list: array, field: string, value: stringRegex)`
+* `findOne(list: array, field: string, value: any)`
+* `findMany(list: array, field: string, value: any)`
+* `findOneRegex(list: array, field: string, value: stringRegex)`
+* `findManyRegex(list: array, field: string, value: stringRegex)`
 
 Parameters:
 
-	* list: Array of structs.
-    * field: The name of the struct field to search. In case of the regex functions, the property (name = `field`) must be of type string.
-    * value: The value to compare the field with. In case of the regex functions, `value` must be a regex string.
+* list: Array of structs.
+* field: The name of the struct field to search. In case of the regex functions, the property (name = `field`) must be of type string.
+* value: The value to compare the field with. In case of the regex functions, `value` must be a regex string.
 
 Returns:
 
-	* `findOne`: First matching item (or nil if no match).
-	* `findMany`: Array of all matching items.
-    * `findOneRegex`: First item with a field matching a regex.
-	* `findManyRegex`: All items with fields matching a regex.
+* `findOne`: First matching item (or nil if no match).
+* `findMany`: Array of all matching items.
+* `findOneRegex`: First item with a field matching a regex.
+* `findManyRegex`: All items with fields matching a regex.
 
 ### `evalOnEach`
 
@@ -123,9 +127,9 @@ Definition: `evalOnEach(list: array, expr: string, ret: string)`
 
 Parameters:
 
-	* list: Array of structs.
-    * expr: Boolean expression to evaluate on each struct.
-	* ret: Name of the field to retrieve from each item that satisfies the expression.
+* list: Array of structs.
+* expr: Boolean expression to evaluate on each struct.
+* ret: Name of the field to retrieve from each item that satisfies the expression.
 
 Returns: list of values from the `ret` field of items that pass the expression.
 
@@ -137,23 +141,23 @@ Calculates the sum of a numeric field across all structs in the provided array.
 
 Definition:
 
-	* `sumInt(list: array, field: string)`
-	* `sumInt8(list: array, field: string)`
-	* `sumInt16(list: array, field: string)`
-	* `sumInt32(list: array, field: string)`
-	* `sumInt64(list: array, field: string)`
-	* `sumUint(list: array, field: string)`
-	* `sumUint8(list: array, field: string)`
-	* `sumUint16(list: array, field: string)`
-	* `sumUint32(list: array, field: string)`
-	* `sumUint64(list: array, field: string)`
-	* `sumFloat32(list: array, field: string)`
-	* `sumFloat64(list: array, field: string)`
+* `sumInt(list: array, field: string)`
+* `sumInt8(list: array, field: string)`
+* `sumInt16(list: array, field: string)`
+* `sumInt32(list: array, field: string)`
+* `sumInt64(list: array, field: string)`
+* `sumUint(list: array, field: string)`
+* `sumUint8(list: array, field: string)`
+* `sumUint16(list: array, field: string)`
+* `sumUint32(list: array, field: string)`
+* `sumUint64(list: array, field: string)`
+* `sumFloat32(list: array, field: string)`
+* `sumFloat64(list: array, field: string)`
 
 Parameters:
 
-	* list: Array of structs.
-	* field: Name of the numeric field to sum.
+* list: Array of structs.
+* field: Name of the numeric field to sum.
 
 Returns: integer
 
@@ -165,8 +169,8 @@ Provides access to a field of a struct or each struct in an array.
 
 Parameters:
 
-	* LHS: Struct or an array of structs.
-    * RHS: Field name as a string.
+* LHS: Struct or an array of structs.
+* RHS: Field name as a string.
 
 Returns: Value(s) of the field for struct(s) in x.
 
