@@ -15,12 +15,12 @@ RINC (short for "Reporting IN Cluster") is a simple and lightweight reporting to
 
 ## Supported Reports
 
-- Kubernetes deployment and statefulset status reports
-- Long-running job reports
-- Kubernetes deployment and statefulset image tag reports
-- RabbitMQ metrics reports
-- CEPH metrics reports
-- Pod status reports (*Work in Progress*)
+* Kubernetes deployment and statefulset status reports
+* Long-running job reports
+* Kubernetes deployment and statefulset image tag reports
+* RabbitMQ metrics reports
+* CEPH metrics reports
+* Pod status reports (*Work in Progress*)
 
 Please refer to the provided [example configuration](./config.example.yaml) and [Helm chart](./helm/rinc/).
 
@@ -59,6 +59,7 @@ Checks if y is contained within x.
 Definition: `has(x: array|string, y: any|string)`
 
 Parameters:
+
 	* x: Can be a string or array.
     * y: The value to check for within x.
 
@@ -71,6 +72,7 @@ Returns the length of x if it is a string, array or a hashmap.
 Definition: `len(x: array|string)`
 
 Parameters:
+
 	* x: Any supported type (string, array, map).
 
 Returns: int
@@ -82,6 +84,7 @@ Checks if all elements in list have a struct field field that equals a value.
 Definition: `fieldsEq(list: array, field: string, value: any)`
 
 Parameters:
+
 	* list: Array of structs.
 	* field: Name of the struct field to compare.
 	* value: The value to check for equality with each struct’s field.
@@ -93,17 +96,20 @@ Returns: bool
 These functions search an array of structs for items with a field matching a specific value or regex.
 
 Definition:
+
 	* `findOne(list: array, field: string, value: any)`
 	* `findMany(list: array, field: string, value: any)`
 	* `findOneRegex(list: array, field: string, value: stringRegex)`
 	* `findManyRegex(list: array, field: string, value: stringRegex)`
 
 Parameters:
+
 	* list: Array of structs.
     * field: The name of the struct field to search. In case of the regex functions, the property (name = `field`) must be of type string.
     * value: The value to compare the field with. In case of the regex functions, `value` must be a regex string.
 
 Returns:
+
 	* `findOne`: First matching item (or nil if no match).
 	* `findMany`: Array of all matching items.
     * `findOneRegex`: First item with a field matching a regex.
@@ -116,6 +122,7 @@ Evaluates an expression on each struct in list and returns a list of values for 
 Definition: `evalOnEach(list: array, expr: string, ret: string)`
 
 Parameters:
+
 	* list: Array of structs.
     * expr: Boolean expression to evaluate on each struct.
 	* ret: Name of the field to retrieve from each item that satisfies the expression.
@@ -129,6 +136,7 @@ Where T can be `Int`, `Int8`, `Int16`, `Int32`, `Int64`, `Uint`, `Uint8`, `Uint1
 Calculates the sum of a numeric field across all structs in the provided array.
 
 Definition:
+
 	* `sumInt(list: array, field: string)`
 	* `sumInt8(list: array, field: string)`
 	* `sumInt16(list: array, field: string)`
@@ -143,6 +151,7 @@ Definition:
 	* `sumFloat64(list: array, field: string)`
 
 Parameters:
+
 	* list: Array of structs.
 	* field: Name of the numeric field to sum.
 
@@ -155,6 +164,7 @@ Returns: integer
 Provides access to a field of a struct or each struct in an array.
 
 Parameters:
+
 	* LHS: Struct or an array of structs.
     * RHS: Field name as a string.
 
