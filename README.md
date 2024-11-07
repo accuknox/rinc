@@ -17,7 +17,7 @@ RINC (short for "Reporting IN Cluster") is a simple and lightweight reporting to
 
 ![](./architecture.png)
 
-## Supported Reports
+## Supported reports
 
 * Kubernetes deployment and statefulset status reports
 * Long-running job reports
@@ -32,7 +32,7 @@ Please refer to the provided [example configuration](./config.example.yaml) and 
 
 Alerts are at the heart of RINC. They are configured using an expression language powered by the [gval](https://github.com/PaesslerAG/gval) Go library.
 
-### Example CEPH Alert
+### Example CEPH alert
 
 Below is an example of a CEPH alert that triggers when one or more OSDs are not part of the data replication and recovery process:
 
@@ -42,7 +42,7 @@ Below is an example of a CEPH alert that triggers when one or more OSDs are not 
   severity: warning
 ```
 
-### Breakdown of the Alert Structure
+### Breakdown of the alert structure
 
 An alert consists of three parts:
 
@@ -54,9 +54,9 @@ An alert consists of three parts:
 
 We extend gval with custom functions and operators to help you write alerts.
 
-## Custom Functions
+### Custom functions
 
-### `has`
+#### `has`
 
 Checks if y is contained within x.
 
@@ -69,7 +69,7 @@ Parameters:
 
 Returns: bool
 
-### `len`
+#### `len`
 
 Returns the length of x if it is a string, array or a hashmap.
 
@@ -81,7 +81,7 @@ Parameters:
 
 Returns: int
 
-### `fieldsEq`
+#### `fieldsEq`
 
 Checks if all elements in list have a struct field field that equals a value.
 
@@ -95,7 +95,7 @@ Parameters:
 
 Returns: bool
 
-### `findOne`, `findMany`, `findOneRegex`, `findManyRegex`
+#### `findOne`, `findMany`, `findOneRegex`, `findManyRegex`
 
 These functions search an array of structs for items with a field matching a specific value or regex.
 
@@ -119,7 +119,7 @@ Returns:
 * `findOneRegex`: First item with a field matching a regex.
 * `findManyRegex`: All items with fields matching a regex.
 
-### `evalOnEach`
+#### `evalOnEach`
 
 Evaluates an expression on each struct in list and returns a list of values for the `ret` field from items that satisfy the expression.
 
@@ -133,7 +133,7 @@ Parameters:
 
 Returns: list of values from the `ret` field of items that pass the expression.
 
-### `sumT`
+#### `sumT`
 
 Where T can be `Int`, `Int8`, `Int16`, `Int32`, `Int64`, `Uint`, `Uint8`, `Uint16`, `Uint32`, `Uint64`, `Float32` & `Float64`.
 
@@ -161,9 +161,9 @@ Parameters:
 
 Returns: integer
 
-## Custom Operators
+### Custom operators
 
-### Access Operator (`->`)
+#### Access Operator (`->`)
 
 Provides access to a field of a struct or each struct in an array.
 
@@ -186,7 +186,7 @@ x -> foo // "bar"
 x -> bar // "blah"
 ```
 
-### Pipe Operator (`|`)
+#### Pipe Operator (`|`)
 
 Use to chain expressions. The result of the preceding expression is passed as input to the following expression.
 
@@ -201,7 +201,20 @@ Example,
 
 In the above example, a variable `x` is defined in the first half, and then used in the second half.
 
-## Exploring Collected Metrics
+### Injecting expressions into the alert message
+
+To inject the result of an expression into the message itself, surround the expression with backticks (``). Continuing with the CEPH OSDs example, suppose we want to include the number of OSDs that are **not** part of the data recovery and replication process.
+
+```yaml
+- message: |
+    `sumUint(Status.OSDMap.OSDs, "In")` OSDs are not part of the data replication and recovery process.
+  when: sumUint(Status.OSDMap.OSDs, "In") != len(Status.OSDMap.OSDs)
+  severity: warning
+```
+
+It is important to use the multi-line YAML string syntax (`|`) for the YAML libraries to parse the input correctly.
+
+## Exploring collected metrics
 
 Understanding the expression language is important, but it's equally crucial to know what variables are available for use in your expressions. For example, to write an alert that triggers when one or more OSDs are not part of the data replication and recovery process, you need to know the relevant variable. In this case, the variable is `Status.OSDMap.OSDs`, which is an array of structs containing a property called `In`. The value of `In` is 1 when the OSD is part of the data replication and recovery process, and 0 otherwise.
 
