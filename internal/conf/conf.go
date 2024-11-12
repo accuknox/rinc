@@ -42,6 +42,8 @@ type C struct {
 	DaSS DaSS `koanf:"deploymentAndStatefulsetStatus"`
 	// Ceph contains configuration related to the ceph status reporter.
 	Ceph Ceph `koanf:"ceph"`
+	// PodStatus contains configuration related to the pod status reporter.
+	PodStatus PodStatus `koanf:"podStatus"`
 }
 
 // New creates a configuration using the provided arguments and config file.

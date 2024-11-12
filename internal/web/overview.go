@@ -111,6 +111,13 @@ func (s Srv) Overview(c echo.Context) error {
 				ID:          id,
 				AlertsCount: count,
 			})
+		case db.CollectionPodStatus:
+			statuses = append(statuses, view.OverviewStatus{
+				Name:        "Pod Status",
+				Slug:        "podstatus",
+				ID:          id,
+				AlertsCount: count,
+			})
 		}
 	}
 

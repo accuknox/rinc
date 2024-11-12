@@ -1,0 +1,94 @@
+package pod
+
+import (
+	"fmt"
+	"time"
+
+	types "github.com/accuknox/rinc/types/pod"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
+)
+
+const (
+	kindDeployment  = "Deployment"
+	kindStatefulset = "StatefulSet"
+)
+
+templ Report(metrics types.Metrics, alerts []db.Alert) {
+	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
+	@resource(kindDeployment, metrics.Deployments)
+	@resource(kindStatefulset, metrics.Statefulsets)
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		Pod Status ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+}
+
+templ resource(kind string, resources []types.Resource) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-2xl font-bold mb-4">{ kind }</h2>
+		for _, r := range resources {
+			<h3 class="text-lg font-bold mb-2 mt-6">
+				{ r.Name } (namespace={ r.Namespace })
+			</h3>
+			<table class="full-width-table">
+				<thead>
+					<th>Name</th>
+					<th>Status</th>
+					<th>QOSClass</th>
+					<th>Start Time</th>
+					<th>Containers</th>
+				</thead>
+				<tbody>
+					for _, pod := range r.Pods {
+						<tr>
+							<td>{ pod.Name }</td>
+							switch pod.Status {
+								case "Running", "Completed":
+									<td class="success">{ pod.Status }</td>
+								case "Pending":
+									<td class="warning">{ pod.Status }</td>
+								case "Evicted", "Unknown":
+									<td class="info">{ pod.Status }</td>
+								default:
+									<td class="error">{ pod.Status }</td>
+							}
+							<td>{ pod.QOSClass }</td>
+							<td>{ pod.StartTime.UTC().Round(time.Minute).String() }</td>
+							<td>
+								<table class="full-width-table nested-table">
+									<thead>
+										<th>Name</th>
+										<th>Ready</th>
+										<th>State</th>
+										<th>Restart Count</th>
+										<th>Last Termination State</th>
+									</thead>
+									<tbody>
+										for _, c := range pod.Containers {
+											<tr>
+												<td>
+													{ c.Name }
+													if c.IsInit {
+														(init)
+													}
+												</td>
+												<td>{ fmt.Sprintf("%v", c.Ready) }</td>
+												<td>{ c.State }</td>
+												<td>{ fmt.Sprintf("%d", c.RestartCount) }</td>
+												<td>{ c.LastTerminationState }</td>
+											</tr>
+										}
+									</tbody>
+								</table>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	</section>
+}

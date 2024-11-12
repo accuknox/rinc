@@ -186,6 +186,10 @@ x -> foo // "bar"
 x -> bar // "blah"
 ```
 
+#### Access Spread Operator (`~>`)
+
+Similar to the access operator (->), with the only difference that if the RHS is an array, it will be flattened to return a 1D array.
+
 #### Pipe Operator (`|`)
 
 Use to chain expressions. The result of the preceding expression is passed as input to the following expression.
