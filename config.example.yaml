@@ -150,6 +150,24 @@ connectivity:
     enable: false
     # vault address. E.g., http://accuknox-vault.accuknox-vault.svc.cluster.local:8200
     addr: ""
+  mongodb:
+    # enable mongodb connectivity check
+    enable: false
+    # mongodb connection uri.
+    #
+    # E.g., mongodb://accuknox-mongodb-rs0.accuknox-mongodb.svc.cluster.local:27017
+    uri: ""
+  neo4j:
+    # enable neo4j connectivity check
+    enable: false
+    # neo4j connection URI
+    #
+    # E.g., neo4j://neo4j.accuknox-neo4j.svc.cluster.local:7687
+    uri: ""
+    # neo4j basic auth username
+    username: ""
+    # neo4j basic auth password
+    password: ""
   alerts:
     - message: "Vault is not reachable"
       when: Vault.Reachable == false
@@ -162,4 +180,7 @@ connectivity:
       severity: critical
     - message: "MongoDB is not reachable"
       when: Mongodb.Reachable == false
+      severity: critical
+    - message: "Neo4j is not reachable"
+      when: Neo4j.Reachable == false
       severity: critical

@@ -13,6 +13,7 @@ require (
 	github.com/knadh/koanf/providers/file v1.1.0
 	github.com/knadh/koanf/v2 v2.1.1
 	github.com/labstack/echo/v4 v4.12.0
+	github.com/neo4j/neo4j-go-driver/v5 v5.26.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
 	github.com/xeonx/timeago v1.0.0-rc5

@@ -67,6 +67,21 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		}
 	}
 
+	if r.conf.Neo4j.Enable {
+		neo4j, err := r.neo4jReport(ctx)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"fetching neo4j report",
+				slog.String("error", err.Error()),
+			)
+		}
+		if neo4j != nil {
+			metrics.Neo4j = *neo4j
+		}
+	}
+
 	result, err := db.
 		Database(r.mongo).
 		Collection(db.CollectionConnectivity).
