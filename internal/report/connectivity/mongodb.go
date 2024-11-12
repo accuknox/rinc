@@ -18,6 +18,7 @@ func (r Reporter) mongodbReport(ctx context.Context) (*types.Mongodb, error) {
 	if err != nil {
 		return nil, fmt.Errorf("connecting to mongodb: %w", err)
 	}
+	defer client.Disconnect(ctx)
 
 	// ping to verify that the deployment is up and the Client was configured
 	// successfully.
