@@ -52,6 +52,21 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		}
 	}
 
+	if r.conf.Mongodb.Enable {
+		mongodb, err := r.mongodbReport(ctx)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"fetching mongodb report",
+				slog.String("error", err.Error()),
+			)
+		}
+		if mongodb != nil {
+			metrics.Mongodb = *mongodb
+		}
+	}
+
 	result, err := db.
 		Database(r.mongo).
 		Collection(db.CollectionConnectivity).

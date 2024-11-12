@@ -7,13 +7,19 @@ import (
 	"github.com/accuknox/rinc/view/icon"
 	types "github.com/accuknox/rinc/types/connectivity"
 	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/internal/conf"
 	"github.com/accuknox/rinc/view/partial"
 )
 
-templ Report(metrics types.Metrics, alerts []db.Alert) {
+templ Report(metrics types.Metrics, alerts []db.Alert, conf conf.Connectivity) {
 	@heading(metrics.Timestamp)
 	@partial.Alerts(alerts)
-	@vault(metrics.Vault)
+	if conf.Vault.Enable {
+		@vault(metrics.Vault)
+	}
+	if conf.Mongodb.Enable {
+		@mongodb(metrics.Mongodb)
+	}
 }
 
 templ indicator(reachable bool) {
@@ -82,6 +88,27 @@ templ vault(data types.Vault) {
 						<td>{ data.Version }</td>
 					</tr>
 				}
+			</tbody>
+		</table>
+	</section>
+}
+
+templ mongodb(data types.Mongodb) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">MongoDB</h2>
+		<table>
+			<tbody>
+				<tr>
+					<th>Status</th>
+					<td class="flex items-center gap-2">
+						@indicator(data.Reachable)
+						if data.Reachable {
+							<span>Reachable</span>
+						} else {
+							<span>Not Reachable</span>
+						}
+					</td>
+				</tr>
 			</tbody>
 		</table>
 	</section>

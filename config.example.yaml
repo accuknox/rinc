@@ -156,7 +156,10 @@ connectivity:
       severity: critical
     - message: "Vault is not initialized"
       when: Vault.Reachable && Vault.Initialized == false
-      severity: critical
+      severity: warning
     - message: "Vault is sealed"
       when: Vault.Reachable && Vault.Sealed
+      severity: critical
+    - message: "MongoDB is not reachable"
+      when: Mongodb.Reachable == false
       severity: critical

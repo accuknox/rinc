@@ -137,7 +137,7 @@ func (s Srv) Connectivity(c echo.Context) error {
 		Component: layout.Base(
 			title,
 			partial.Navbar(false),
-			tmpl.Report(*metrics, alerts.Alerts),
+			tmpl.Report(*metrics, alerts.Alerts, s.conf.Connectivity),
 		),
 	})
 }
