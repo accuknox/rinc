@@ -100,5 +100,16 @@ func (j Job) GenerateAll(ctx context.Context) error {
 		}
 	}
 
+	err := j.GenerateConnectivityReport(ctx, now)
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"generating connectivity status report",
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("generating connectivity status report: %w", err)
+	}
+
 	return nil
 }

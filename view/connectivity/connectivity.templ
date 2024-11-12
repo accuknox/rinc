@@ -1,0 +1,88 @@
+package connectivity
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/accuknox/rinc/view/icon"
+	types "github.com/accuknox/rinc/types/connectivity"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
+)
+
+templ Report(metrics types.Metrics, alerts []db.Alert) {
+	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
+	@vault(metrics.Vault)
+}
+
+templ indicator(reachable bool) {
+	if reachable {
+		<span class="text-green-700 inline">
+			@icon.Check(18)
+		</span>
+	} else {
+		<span class="text-red-700 inline">
+			@icon.Cross(18)
+		</span>
+	}
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		Connectivity Status ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+}
+
+templ vault(data types.Vault) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Vault</h2>
+		<table>
+			<tbody>
+				<tr>
+					<th>Status</th>
+					<td class="flex items-center gap-2">
+						@indicator(data.Reachable)
+						if data.Reachable {
+							<span>Reachable</span>
+						} else {
+							<span>Not Reachable</span>
+						}
+					</td>
+				</tr>
+				if data.Reachable {
+					<tr>
+						<th>Initialized</th>
+						<td
+							class={
+								templ.KV("error", !data.Initialized),
+								templ.KV("success", data.Initialized),
+							}
+						>
+							{ fmt.Sprintf("%v", data.Initialized) }
+						</td>
+					</tr>
+					<tr>
+						<th>Sealed</th>
+						<td
+							class={
+								templ.KV("error", data.Sealed),
+								templ.KV("success", !data.Sealed),
+							}
+						>
+							{ fmt.Sprintf("%v", data.Sealed) }
+						</td>
+					</tr>
+					<tr>
+						<th>Cluster</th>
+						<td>{ data.ClusterName }</td>
+					</tr>
+					<tr>
+						<th>Version</th>
+						<td>{ data.Version }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}

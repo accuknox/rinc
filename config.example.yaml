@@ -144,3 +144,19 @@ ceph:
     - message: One or more OSDs are not part of data replication and recovery process
       when: sumUint(Status.OSDMap.OSDs, "In") != len(Status.OSDMap.OSDs)
       severity: warning
+connectivity:
+  vault:
+    # enable vault connectivity check
+    enable: false
+    # vault address. E.g., http://accuknox-vault.accuknox-vault.svc.cluster.local:8200
+    addr: ""
+  alerts:
+    - message: "Vault is not reachable"
+      when: Vault.Reachable == false
+      severity: critical
+    - message: "Vault is not initialized"
+      when: Vault.Reachable && Vault.Initialized == false
+      severity: critical
+    - message: "Vault is sealed"
+      when: Vault.Reachable && Vault.Sealed
+      severity: critical

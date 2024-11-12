@@ -1,0 +1,103 @@
+package connectivity
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+	"time"
+
+	"github.com/accuknox/rinc/internal/conf"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/internal/report"
+	types "github.com/accuknox/rinc/types/connectivity"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"k8s.io/client-go/kubernetes"
+)
+
+// Reporter is the connectivity status reporter.
+type Reporter struct {
+	kubeClient *kubernetes.Clientset
+	conf       conf.Connectivity
+	mongo      *mongo.Client
+}
+
+// NewReporter creates a new connectivity status reporter.
+func NewReporter(c conf.Connectivity, k *kubernetes.Clientset, mongo *mongo.Client) Reporter {
+	return Reporter{
+		conf:       c,
+		kubeClient: k,
+		mongo:      mongo,
+	}
+}
+
+// Report satisfies the report.Reporter interface by writing the connectivity
+// status to the database.
+func (r Reporter) Report(ctx context.Context, now time.Time) error {
+	metrics := types.Metrics{Timestamp: now}
+
+	if r.conf.Vault.Enable {
+		vault, err := r.vaultReport(ctx)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"fetching vault report",
+				slog.String("error", err.Error()),
+			)
+		}
+		if vault != nil {
+			metrics.Vault = *vault
+		}
+	}
+
+	result, err := db.
+		Database(r.mongo).
+		Collection(db.CollectionConnectivity).
+		InsertOne(ctx, metrics)
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"connectivity: inserting metrics into mongodb",
+			slog.Time("timestamp", now),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("inserting metrics into mongodb: %w", err)
+	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"connectivity: inserted metrics into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
+
+	alerts := report.SoftEvaluateAlerts(ctx, r.conf.Alerts, metrics)
+	result, err = db.
+		Database(r.mongo).
+		Collection(db.CollectionAlerts).
+		InsertOne(ctx, bson.M{
+			"timestamp": now,
+			"from":      db.CollectionConnectivity,
+			"alerts":    alerts,
+		})
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"connectivity: inserting alerts into mongodb",
+			slog.Time("timestamp", now),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("inserting alerts into mongodb: %w", err)
+	}
+	slog.LogAttrs(
+		ctx,
+		slog.LevelDebug,
+		"connectivity: inserted alerts into mongodb",
+		slog.Any("insertedId", result.InsertedID),
+	)
+
+	return nil
+}
