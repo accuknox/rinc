@@ -31,7 +31,7 @@ templ resource(kind string, resources []types.Resource) {
 	<section class="px-3 lg:px-5 mb-5">
 		<h2 class="text-2xl font-bold mb-4">{ kind }</h2>
 		for _, r := range resources {
-			<h3 class="text-lg font-bold mb-2 mt-6">
+			<h3 class="text-lg font-bold mb-2 mt-6" id={ fmt.Sprintf("%s-%s", r.Name, r.Namespace) }>
 				{ r.Name } (namespace={ r.Namespace })
 			</h3>
 			<table class="full-width-table">
