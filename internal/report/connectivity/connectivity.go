@@ -82,6 +82,21 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		}
 	}
 
+	if r.conf.Postgres.Enable {
+		postgres, err := r.postgresReport(ctx)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"fetching postgres report",
+				slog.String("error", err.Error()),
+			)
+		}
+		if postgres != nil {
+			metrics.Postgres = *postgres
+		}
+	}
+
 	result, err := db.
 		Database(r.mongo).
 		Collection(db.CollectionConnectivity).

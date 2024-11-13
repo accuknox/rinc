@@ -10,6 +10,8 @@ type Connectivity struct {
 	Mongodb MongodbCheck `koanf:"mongodb"`
 	// Neo4j contains all configuration related to neo4j connectivity check.
 	Neo4j Neo4jCheck `koanf:"neo4j"`
+	// Postgres contains all configuration related to postgres connectivity check.
+	Postgres PostgresCheck `koanf:"postgres"`
 	// Alerts contain a message template, a severity level, and a
 	// conditional expression to trigger the respective alert.
 	Alerts []Alert `koanf:"alerts"`
@@ -46,5 +48,23 @@ type Neo4jCheck struct {
 	// Username is the neo4j basic auth username.
 	Username string `koanf:"username"`
 	// Password is the neo4j basic auth password.
+	Password string `koanf:"password"`
+}
+
+// Postgres contains all configuration related to postgres connectivity check.
+type PostgresCheck struct {
+	// Enable enables postgres connectivity check.
+	Enable bool `koanf:"enable"`
+	// Host is the postgresql server host (without the port).
+	//
+	// E.g., postgres-replicas.accuknox-postgresql.svc.cluster.local
+	Host string `koanf:"host"`
+	// Port is the postgresql server port.
+	//
+	// Default: 5432
+	Port uint16 `koanf:"port"`
+	// Username is the postgres auth username.
+	Username string `koanf:"username"`
+	// Password is the postgres auth password.
 	Password string `koanf:"password"`
 }

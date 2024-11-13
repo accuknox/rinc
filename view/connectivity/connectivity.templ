@@ -23,6 +23,9 @@ templ Report(metrics types.Metrics, alerts []db.Alert, conf conf.Connectivity) {
 	if conf.Neo4j.Enable {
 		@neo4j(metrics.Neo4j)
 	}
+	if conf.Postgres.Enable {
+		@postgres(metrics.Postgres)
+	}
 }
 
 templ indicator(reachable bool) {
@@ -120,6 +123,27 @@ templ mongodb(data types.Mongodb) {
 templ neo4j(data types.Neo4j) {
 	<section class="px-3 lg:px-5 mb-5">
 		<h2 class="text-xl font-bold mb-2">Neo4j</h2>
+		<table>
+			<tbody>
+				<tr>
+					<th>Status</th>
+					<td class="flex items-center gap-2">
+						@indicator(data.Reachable)
+						if data.Reachable {
+							<span>Reachable</span>
+						} else {
+							<span>Not Reachable</span>
+						}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+}
+
+templ postgres(data types.Postgres) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Postgres</h2>
 		<table>
 			<tbody>
 				<tr>
