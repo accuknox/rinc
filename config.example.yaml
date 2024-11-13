@@ -190,6 +190,13 @@ connectivity:
     #
     # E.g., keydb-service.keydb.svc.cluster.local:6379
     addr: ""
+  metabase:
+    # enable metabase connectivity check
+    enable: false
+    # metabase base url
+    #
+    # E.g., http://metabase-service.metabase.svc.cluster.local
+    baseUrl: ""
   alerts: []
     # - message: "Vault is not reachable"
     #   when: Vault.Reachable == false
@@ -211,4 +218,7 @@ connectivity:
     #   severity: critical
     # - message: "KeyDB is not reachable"
     #   when: Redis.Reachable == false
+    #   severity: critical
+    # - message: "Metabase is not healthy"
+    #   when: Metabase.Healthy == false
     #   severity: critical

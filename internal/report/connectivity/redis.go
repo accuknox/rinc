@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	types "github.com/accuknox/rinc/types/connectivity"
 
@@ -12,6 +13,9 @@ import (
 
 // Report reports the redis connectivity status.
 func (r Reporter) redisReport(ctx context.Context) (*types.Redis, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	c := redis.NewClient(&redis.Options{
 		Addr: r.conf.Redis.Addr,
 	})

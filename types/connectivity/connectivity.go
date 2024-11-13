@@ -9,4 +9,5 @@ type Metrics struct {
 	Neo4j     Neo4j     `bson:"neo4j"`
 	Postgres  Postgres  `bson:"postgres"`
 	Redis     Redis     `bson:"redis"`
+	Metabase  Metabase  `bson:"metabase"`
 }

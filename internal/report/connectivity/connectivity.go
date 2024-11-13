@@ -112,6 +112,21 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		}
 	}
 
+	if r.conf.Metabase.Enable {
+		metabase, err := r.metabaseReport(ctx)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"fetching metabase report",
+				slog.String("error", err.Error()),
+			)
+		}
+		if metabase != nil {
+			metrics.Metabase = *metabase
+		}
+	}
+
 	result, err := db.
 		Database(r.mongo).
 		Collection(db.CollectionConnectivity).

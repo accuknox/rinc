@@ -15,6 +15,9 @@ type Connectivity struct {
 	// Redis contains all configuration related to redis/keydb connectivity
 	// check.
 	Redis RedisCheck `koanf:"redis"`
+	// Metabase contains all configuration related to metabase connectivity
+	// check.
+	Metabase MetabaseCheck `koanf:"metabase"`
 	// Alerts contain a message template, a severity level, and a
 	// conditional expression to trigger the respective alert.
 	Alerts []Alert `koanf:"alerts"`
@@ -81,4 +84,14 @@ type RedisCheck struct {
 	//
 	// E.g., keydb-service.keydb.svc.cluster.local:6379
 	Addr string `koanf:"addr"`
+}
+
+// Metabase contains all configuration related to metabase connectivity check.
+type MetabaseCheck struct {
+	// Enable enables metabase connectivity check.
+	Enable bool `koanf:"enable"`
+	// BaseURL is the metabase base URL.
+	//
+	// E.g., http://metabase-service.metabase.svc.cluster.local
+	BaseURL string `koanf:"baseUrl"`
 }

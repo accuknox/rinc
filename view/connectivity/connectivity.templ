@@ -29,6 +29,9 @@ templ Report(metrics types.Metrics, alerts []db.Alert, conf conf.Connectivity) {
 	if conf.Redis.Enable {
 		@redis(metrics.Redis)
 	}
+	if conf.Metabase.Enable {
+		@metabase(metrics.Metabase)
+	}
 }
 
 templ indicator(reachable bool) {
@@ -178,6 +181,27 @@ templ redis(data types.Redis) {
 							<span>Reachable</span>
 						} else {
 							<span>Not Reachable</span>
+						}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+}
+
+templ metabase(data types.Metabase) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Metabase</h2>
+		<table>
+			<tbody>
+				<tr>
+					<th>Status</th>
+					<td class="flex items-center gap-2">
+						@indicator(data.Healthy)
+						if data.Healthy {
+							<span>Healthy</span>
+						} else {
+							<span>Unhealthy</span>
 						}
 					</td>
 				</tr>

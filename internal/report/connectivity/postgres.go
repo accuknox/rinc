@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	types "github.com/accuknox/rinc/types/connectivity"
 
@@ -12,6 +13,9 @@ import (
 
 // Report reports the postgres connectivity status.
 func (r Reporter) postgresReport(ctx context.Context) (*types.Postgres, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	connStr := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s sslmode=disable",
 		r.conf.Postgres.Host,

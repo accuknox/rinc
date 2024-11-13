@@ -3,6 +3,7 @@ package connectivity
 import (
 	"context"
 	"fmt"
+	"time"
 
 	types "github.com/accuknox/rinc/types/connectivity"
 
@@ -13,6 +14,9 @@ import (
 
 // Report reports the mongodb connectivity status.
 func (r Reporter) mongodbReport(ctx context.Context) (*types.Mongodb, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	opts := options.Client().ApplyURI(r.conf.Mongodb.URI)
 	client, err := mongo.Connect(opts)
 	if err != nil {

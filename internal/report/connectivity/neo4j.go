@@ -3,6 +3,7 @@ package connectivity
 import (
 	"context"
 	"fmt"
+	"time"
 
 	types "github.com/accuknox/rinc/types/connectivity"
 
@@ -11,6 +12,9 @@ import (
 
 // Report reports the neo4j connectivity status.
 func (r Reporter) neo4jReport(ctx context.Context) (*types.Neo4j, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	tkn := neo4j.BasicAuth(r.conf.Neo4j.Username, r.conf.Neo4j.Password, "")
 	driver, err := neo4j.NewDriverWithContext(r.conf.Neo4j.URI, tkn)
 	if err != nil {
