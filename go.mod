@@ -17,9 +17,10 @@ require (
 	github.com/xeonx/timeago v1.0.0-rc5
 	go.mongodb.org/mongo-driver/v2 v2.0.0-beta2
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c
-	k8s.io/api v0.31.0
-	k8s.io/apimachinery v0.31.0
-	k8s.io/client-go v0.31.0
+	k8s.io/api v0.31.2
+	k8s.io/apimachinery v0.31.2
+	k8s.io/client-go v0.31.2
+	k8s.io/metrics v0.31.2
 )
 
 require (

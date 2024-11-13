@@ -22,12 +22,13 @@ type Alert struct {
 }
 
 const (
-	CollectionAlerts   = "alerts"
-	CollectionRabbitmq = "rabbitmq"
-	CollectionCeph     = "ceph"
-	CollectionImageTag = "imagetag"
-	CollectionDass     = "dass"
-	CollectionLongJobs = "longjobs"
+	CollectionAlerts              = "alerts"
+	CollectionRabbitmq            = "rabbitmq"
+	CollectionCeph                = "ceph"
+	CollectionImageTag            = "imagetag"
+	CollectionDass                = "dass"
+	CollectionLongJobs            = "longjobs"
+	CollectionResourceUtilization = "resource_utilization"
 )
 
 // Collections is a list of MongoDB collection names, excluding the alerts
@@ -38,4 +39,5 @@ var Collections = []string{
 	CollectionImageTag,
 	CollectionDass,
 	CollectionLongJobs,
+	CollectionResourceUtilization,
 }

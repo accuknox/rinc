@@ -1,0 +1,60 @@
+package resource
+
+import (
+	"fmt"
+	"time"
+
+	types "github.com/accuknox/rinc/types/resource"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
+)
+
+templ Report(metrics types.Metrics, alerts []db.Alert) {
+	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
+	@nodes(metrics.Nodes)
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		Resource Utilization ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+}
+
+templ nodes(list []types.Node) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Nodes</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Name</th>
+				<th>CPU Usage</th>
+				<th>Mem Usage</th>
+			</thead>
+			<tbody>
+				for _, n := range list {
+					<tr>
+						<td>{ n.Name }</td>
+						<td
+							class={
+								templ.KV("error", n.CPU >= 90),
+								templ.KV("warning", n.CPU >= 80 && n.CPU < 90),
+								templ.KV("success", n.CPU < 80),
+							}
+						>
+							{ fmt.Sprintf("%.2f%%", n.CPU) }
+						</td>
+						<td
+							class={
+								templ.KV("error", n.Mem >= 90),
+								templ.KV("warning", n.Mem >= 80 && n.Mem < 90),
+								templ.KV("success", n.Mem < 80),
+							}
+						>
+							{ fmt.Sprintf("%.2f%%", n.Mem) }
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}
