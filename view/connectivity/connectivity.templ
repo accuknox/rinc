@@ -26,6 +26,9 @@ templ Report(metrics types.Metrics, alerts []db.Alert, conf conf.Connectivity) {
 	if conf.Postgres.Enable {
 		@postgres(metrics.Postgres)
 	}
+	if conf.Redis.Enable {
+		@redis(metrics.Redis)
+	}
 }
 
 templ indicator(reachable bool) {
@@ -144,6 +147,27 @@ templ neo4j(data types.Neo4j) {
 templ postgres(data types.Postgres) {
 	<section class="px-3 lg:px-5 mb-5">
 		<h2 class="text-xl font-bold mb-2">Postgres</h2>
+		<table>
+			<tbody>
+				<tr>
+					<th>Status</th>
+					<td class="flex items-center gap-2">
+						@indicator(data.Reachable)
+						if data.Reachable {
+							<span>Reachable</span>
+						} else {
+							<span>Not Reachable</span>
+						}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+}
+
+templ redis(data types.Redis) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Redis / KeyDB</h2>
 		<table>
 			<tbody>
 				<tr>

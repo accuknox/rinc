@@ -97,6 +97,21 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		}
 	}
 
+	if r.conf.Redis.Enable {
+		redis, err := r.redisReport(ctx)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"fetching redis report",
+				slog.String("error", err.Error()),
+			)
+		}
+		if redis != nil {
+			metrics.Redis = *redis
+		}
+	}
+
 	result, err := db.
 		Database(r.mongo).
 		Collection(db.CollectionConnectivity).

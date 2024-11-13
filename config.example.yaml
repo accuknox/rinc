@@ -168,19 +168,47 @@ connectivity:
     username: ""
     # neo4j basic auth password
     password: ""
-  alerts:
-    - message: "Vault is not reachable"
-      when: Vault.Reachable == false
-      severity: critical
-    - message: "Vault is not initialized"
-      when: Vault.Reachable && Vault.Initialized == false
-      severity: warning
-    - message: "Vault is sealed"
-      when: Vault.Reachable && Vault.Sealed
-      severity: critical
-    - message: "MongoDB is not reachable"
-      when: Mongodb.Reachable == false
-      severity: critical
-    - message: "Neo4j is not reachable"
-      when: Neo4j.Reachable == false
-      severity: critical
+  postgres:
+    # enable postgresql connectivity check
+    enable: false
+    # postgres server host (without the port)
+    #
+    # E.g., postgres-replicas.accuknox-postgresql.svc.cluster.local
+    host: ""
+    # postgresql server port.
+    #
+    # Default: 5432
+    port: 5432
+    # postgresql auth username.
+    username: ""
+    # postgresql auth password.
+    password: ""
+  redis:
+    # enable redis connectivity check
+    enable: false
+    # redis/keydb address
+    #
+    # E.g., keydb-service.keydb.svc.cluster.local:6379
+    addr: ""
+  alerts: []
+    # - message: "Vault is not reachable"
+    #   when: Vault.Reachable == false
+    #   severity: critical
+    # - message: "Vault is not initialized"
+    #   when: Vault.Reachable && Vault.Initialized == false
+    #   severity: warning
+    # - message: "Vault is sealed"
+    #   when: Vault.Reachable && Vault.Sealed
+    #   severity: critical
+    # - message: "MongoDB is not reachable"
+    #   when: Mongodb.Reachable == false
+    #   severity: critical
+    # - message: "Neo4j is not reachable"
+    #   when: Neo4j.Reachable == false
+    #   severity: critical
+    # - message: "Postgres is not reachable"
+    #   when: Postgres.Reachable == false
+    #   severity: critical
+    # - message: "KeyDB is not reachable"
+    #   when: Redis.Reachable == false
+    #   severity: critical

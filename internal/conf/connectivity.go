@@ -12,6 +12,9 @@ type Connectivity struct {
 	Neo4j Neo4jCheck `koanf:"neo4j"`
 	// Postgres contains all configuration related to postgres connectivity check.
 	Postgres PostgresCheck `koanf:"postgres"`
+	// Redis contains all configuration related to redis/keydb connectivity
+	// check.
+	Redis RedisCheck `koanf:"redis"`
 	// Alerts contain a message template, a severity level, and a
 	// conditional expression to trigger the respective alert.
 	Alerts []Alert `koanf:"alerts"`
@@ -67,4 +70,15 @@ type PostgresCheck struct {
 	Username string `koanf:"username"`
 	// Password is the postgres auth password.
 	Password string `koanf:"password"`
+}
+
+// Redis contains all configuration related to redis connectivity check. Also
+// supports keydb.
+type RedisCheck struct {
+	// Enable enables redis/keydb connectivity check.
+	Enable bool `koanf:"enable"`
+	// Addr is the redis/keydb address.
+	//
+	// E.g., keydb-service.keydb.svc.cluster.local:6379
+	Addr string `koanf:"addr"`
 }
