@@ -5,9 +5,11 @@ import (
 
 	"github.com/accuknox/rinc/internal/db"
 	"github.com/accuknox/rinc/types/ceph"
+	"github.com/accuknox/rinc/types/connectivity"
 	"github.com/accuknox/rinc/types/dass"
 	"github.com/accuknox/rinc/types/imagetag"
 	"github.com/accuknox/rinc/types/longjobs"
+	"github.com/accuknox/rinc/types/pod"
 	"github.com/accuknox/rinc/types/rabbitmq"
 	"github.com/accuknox/rinc/types/resource"
 
@@ -34,6 +36,10 @@ func Generate(target string) ([]byte, error) {
 		schema = r.Reflect(longjobs.Metrics{})
 	case db.CollectionResourceUtilization:
 		schema = r.Reflect(resource.Metrics{})
+	case db.CollectionConnectivity:
+		schema = r.Reflect(connectivity.Metrics{})
+	case db.CollectionPodStatus:
+		schema = r.Reflect(pod.Metrics{})
 	default:
 		return nil, fmt.Errorf("invalid target: %q", target)
 	}

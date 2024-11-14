@@ -35,6 +35,7 @@ func Full() []gval.Language {
 		gval.Function("findManyRegex", FindManyRegex),
 		gval.Function("evalOnEach", EvalOnEach),
 		gval.InfixOperator("->", AccessOp),
+		gval.InfixOperator("~>", AccessSpreadOp),
 		gval.PostfixOperator("|", pipeOp),
 	}
 }
@@ -382,6 +383,75 @@ func AccessOp(x, y any) (any, error) {
 					field: field,
 					on:    "list[](arg 0) -> item",
 				}
+			}
+			items = append(items, fval.Interface())
+		}
+		return items, nil
+	default:
+		return nil, ErrUnexpectedKind[string]{
+			arg: 0,
+			want: fmt.Sprintf("%s|%s|%s",
+				reflect.Struct,
+				reflect.Slice,
+				reflect.Array,
+			),
+			got: xval.Kind().String(),
+		}
+	}
+}
+
+func AccessSpreadOp(x, y any) (any, error) {
+	yval := reflect.ValueOf(y)
+	if yval.Kind() != reflect.String {
+		return nil, ErrUnexpectedKind[reflect.Kind]{
+			arg:  1,
+			want: reflect.String,
+			got:  yval.Kind(),
+		}
+	}
+	field := yval.String()
+
+	xval := reflect.ValueOf(x)
+	if xval.Kind() == reflect.Ptr {
+		xval = xval.Elem()
+	}
+	switch xval.Kind() {
+	case reflect.Struct:
+		fval := xval.FieldByName(field)
+		if !fval.IsValid() {
+			return nil, ErrFieldNotExist{
+				field: field,
+				on:    fmt.Sprintf("%s(arg 0)", xval.Kind().String()),
+			}
+		}
+		return fval.Interface(), nil
+	case reflect.Array, reflect.Slice:
+		var items []any
+		for idx := 0; idx < xval.Len(); idx++ {
+			item := reflect.ValueOf(xval.Index(idx).Interface())
+			if item.Kind() == reflect.Ptr {
+				item = item.Elem()
+			}
+			if item.Kind() != reflect.Struct {
+				return nil, ErrUnexpectedKind[reflect.Kind]{
+					arg:  "list[](args 0) -> item",
+					want: reflect.Struct,
+					got:  item.Kind(),
+				}
+			}
+			fval := item.FieldByName(field)
+			if !fval.IsValid() {
+				return nil, ErrFieldNotExist{
+					field: field,
+					on:    "list[](arg 0) -> item",
+				}
+			}
+			if fval.Kind() == reflect.Slice || fval.Kind() == reflect.Array {
+				for idx := 0; idx < fval.Len(); idx++ {
+					val := fval.Index(idx).Interface()
+					items = append(items, val)
+				}
+				continue
 			}
 			items = append(items, fval.Interface())
 		}

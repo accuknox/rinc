@@ -29,6 +29,8 @@ const (
 	CollectionDass                = "dass"
 	CollectionLongJobs            = "longjobs"
 	CollectionResourceUtilization = "resource_utilization"
+	CollectionConnectivity        = "connectivity"
+	CollectionPodStatus           = "podstatus"
 )
 
 // Collections is a list of MongoDB collection names, excluding the alerts
@@ -40,4 +42,6 @@ var Collections = []string{
 	CollectionDass,
 	CollectionLongJobs,
 	CollectionResourceUtilization,
+	CollectionConnectivity,
+	CollectionPodStatus,
 }
