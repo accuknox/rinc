@@ -144,3 +144,26 @@ ceph:
     - message: One or more OSDs are not part of data replication and recovery process
       when: sumUint(Status.OSDMap.OSDs, "In") != len(Status.OSDMap.OSDs)
       severity: warning
+resourceUtilization:
+  # enable node & pod resource utilization reporter
+  enable: false
+  # kubernetes namespace that the resource utilization reporter will be limited
+  # to. Leave blank for all namespaces.
+  namespace: ""
+  alerts:
+    - message: |-
+        Node `evalOnEach(Nodes, "CPUUsedPercent > 90", "Name")` CPU usage above 90%
+      when: len(evalOnEach(Nodes, "CPUUsedPercent > 90", "Name")) > 0
+      severity: critical
+    - message: |-
+        Node `evalOnEach(Nodes, "MemUsedPercent > 90", "Name")` Memory usage above 90%
+      when: len(evalOnEach(Nodes, "MemUsedPercent > 90", "Name")) > 0
+      severity: critical
+    - message: |-
+        Container `evalOnEach(Containers, "CPUUsedPercent > 90", "Name")` CPU usage above 90%
+      when: len(evalOnEach(Containers, "CPUUsedPercent > 90", "Name")) > 0
+      severity: critical
+    - message: |-
+        Container `evalOnEach(Containers, "MemUsedPercent > 90", "Name")` Memory usage above 90%
+      when: len(evalOnEach(Containers, "MemUsedPercent > 90", "Name")) > 0
+      severity: critical

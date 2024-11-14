@@ -12,6 +12,7 @@ import "bytes"
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/accuknox/rinc/internal/db"
@@ -40,7 +41,11 @@ func Report(metrics types.Metrics, alerts []db.Alert) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = nodes(metrics.Nodes).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = nodes(sortNodes(metrics.Nodes)).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = pods(sortContainers(metrics.Containers)).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -71,13 +76,13 @@ func heading(stamp time.Time) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(stamp.UTC().Format("2006-01-02 15:04:05"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 20, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 22, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" UTC)</h1>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" UTC)</h1><section class=\"px-4 mb-5\"><ul><li class=\"flex items-center\"><div class=\"success w-4 h-4 mr-4\"></div><div>Below 80%</div></li><li class=\"flex items-center\"><div class=\"warning w-4 h-4 mr-4\"></div><div>80% - 90%</div></li><li class=\"flex items-center\"><div class=\"error w-4 h-4 mr-4\"></div><div>Above 90%</div></li></ul></section>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -113,7 +118,7 @@ func nodes(list []types.Node) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(n.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 36, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 60, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -124,9 +129,9 @@ func nodes(list []types.Node) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var6 = []any{
-				templ.KV("error", n.CPU >= 90),
-				templ.KV("warning", n.CPU >= 80 && n.CPU < 90),
-				templ.KV("success", n.CPU < 80),
+				templ.KV("error", n.CPUUsedPercent >= 90),
+				templ.KV("warning", n.CPUUsedPercent >= 80 && n.CPUUsedPercent < 90),
+				templ.KV("success", n.CPUUsedPercent < 80),
 			}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 			if templ_7745c5c3_Err != nil {
@@ -150,9 +155,9 @@ func nodes(list []types.Node) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var8 string
-			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f%%", n.CPU))
+			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f%%", n.CPUUsedPercent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 44, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 68, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -163,9 +168,9 @@ func nodes(list []types.Node) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 = []any{
-				templ.KV("error", n.Mem >= 90),
-				templ.KV("warning", n.Mem >= 80 && n.Mem < 90),
-				templ.KV("success", n.Mem < 80),
+				templ.KV("error", n.MemUsedPercent >= 90),
+				templ.KV("warning", n.MemUsedPercent >= 80 && n.MemUsedPercent < 90),
+				templ.KV("success", n.MemUsedPercent < 80),
 			}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
 			if templ_7745c5c3_Err != nil {
@@ -189,9 +194,9 @@ func nodes(list []types.Node) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f%%", n.Mem))
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f%%", n.MemUsedPercent))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 53, Col: 37}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 77, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -211,4 +216,314 @@ func nodes(list []types.Node) templ.Component {
 		}
 		return templ_7745c5c3_Err
 	})
+}
+
+func pods(list []types.Container) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
+		if !templ_7745c5c3_IsBuffer {
+			templ_7745c5c3_Buffer = templ.GetBuffer()
+			defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var12 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var12 == nil {
+			templ_7745c5c3_Var12 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<section class=\"px-3 lg:px-5 mb-5\"><h2 class=\"text-xl font-bold mb-2\">Pods</h2><table class=\"full-width-table\"><thead><th>Namespace</th><th>Pod Name</th><th>Container Name</th><th>CPU Limit (m)</th><th>Mem Limit</th><th>CPU Usage (m)</th><th>Mem Usage</th><th>CPU Usage (%)</th><th>Mem Usage (%)</th></thead> <tbody>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		for _, c := range list {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tr><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(c.Namespace)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 104, Col: 23}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(c.PodName)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 105, Col: 21}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(c.Name)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 106, Col: 18}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var16 string
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(toHumanReadableCPU(c.CPULimit))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 107, Col: 42}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var17 string
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(toHumanReadableMem(c.MemLimit))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 108, Col: 42}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var18 string
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f", c.CPUUsed*1000))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 109, Col: 49}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var19 string
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(toHumanReadableMem(c.MemUsed))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 110, Col: 41}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var20 = []any{
+				templ.KV("error", c.CPUUsedPercent >= 90),
+				templ.KV("warning", c.CPUUsedPercent >= 80 && c.CPUUsedPercent < 90),
+				templ.KV("success", c.CPUUsedPercent < 80),
+			}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var20...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<td class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var20).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var22 string
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(toHumanReadabePercent(c.CPUUsedPercent, c.CPULimit))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 118, Col: 60}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var23 = []any{
+				templ.KV("error", c.MemUsedPercent >= 90),
+				templ.KV("warning", c.MemUsedPercent >= 80 && c.MemUsedPercent < 90),
+				templ.KV("success", c.MemUsedPercent < 80),
+			}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var23...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<td class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var24 string
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var23).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var25 string
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(toHumanReadabePercent(c.MemUsedPercent, c.MemLimit))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/resource/resource.templ`, Line: 127, Col: 60}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td></tr>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</tbody></table></section>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if !templ_7745c5c3_IsBuffer {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteTo(templ_7745c5c3_W)
+		}
+		return templ_7745c5c3_Err
+	})
+}
+
+func toHumanReadableMem(byts float64) string {
+	if byts == 0 {
+		return "N/A"
+	}
+	u := float64(byts) * 9.313226e-10
+	if int(u) != 0 {
+		return fmt.Sprintf("%.0f Gi", u)
+	}
+	u = float64(byts) * 9.536743e-7
+	if int(u) != 0 {
+		return fmt.Sprintf("%.0f Mi", u)
+	}
+	u = float64(byts) / 1024
+	if int(u) != 0 {
+		return fmt.Sprintf("%.0f Ki", u)
+	}
+	return fmt.Sprintf("%d B", uint64(byts))
+}
+
+func toHumanReadableCPU(cores float64) string {
+	if cores == 0 {
+		return "N/A"
+	}
+	return fmt.Sprintf("%.0f", cores*1000)
+}
+
+func toHumanReadabePercent(usagePercent, limit float64) string {
+	if limit == 0 {
+		return "N/A"
+	}
+	return fmt.Sprintf("%.2f", usagePercent)
+}
+
+func sortContainers(containers []types.Container) []types.Container {
+	sort.Slice(containers, func(i, j int) bool {
+		if containers[i].MemLimit == 0 && containers[i].CPULimit == 0 {
+			return false
+		}
+		if containers[j].MemLimit == 0 && containers[j].CPULimit == 0 {
+			return true
+		}
+		var iPriority, jPriority int
+		if containers[i].MemUsedPercent >= 80 && containers[i].MemUsedPercent < 90 {
+			iPriority += 1
+		} else if containers[i].MemUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if containers[i].CPUUsedPercent >= 80 && containers[i].CPUUsedPercent < 90 {
+			iPriority += 1
+		} else if containers[i].CPUUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if containers[j].MemUsedPercent >= 80 && containers[j].MemUsedPercent < 90 {
+			jPriority += 1
+		} else if containers[j].MemUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if containers[j].CPUUsedPercent >= 80 && containers[j].CPUUsedPercent < 90 {
+			jPriority += 1
+		} else if containers[j].CPUUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if iPriority != jPriority {
+			return iPriority > jPriority
+		}
+		if containers[i].MemLimit == 0 || containers[i].CPULimit == 0 {
+			return false
+		}
+		if containers[j].MemLimit == 0 || containers[j].CPULimit == 0 {
+			return true
+		}
+		return containers[i].MemUsedPercent > containers[j].MemUsedPercent
+	})
+	return containers
+}
+
+func sortNodes(nodes []types.Node) []types.Node {
+	sort.Slice(nodes, func(i, j int) bool {
+		var iPriority, jPriority int
+		if nodes[i].MemUsedPercent >= 80 && nodes[i].MemUsedPercent < 90 {
+			iPriority += 1
+		} else if nodes[i].MemUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if nodes[i].CPUUsedPercent >= 80 && nodes[i].CPUUsedPercent < 90 {
+			iPriority += 1
+		} else if nodes[i].CPUUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if nodes[j].MemUsedPercent >= 80 && nodes[j].MemUsedPercent < 90 {
+			jPriority += 1
+		} else if nodes[j].MemUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if nodes[j].CPUUsedPercent >= 80 && nodes[j].CPUUsedPercent < 90 {
+			jPriority += 1
+		} else if nodes[j].CPUUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if iPriority != jPriority {
+			return iPriority > jPriority
+		}
+		return nodes[i].MemUsedPercent > nodes[j].MemUsedPercent
+	})
+	return nodes
 }

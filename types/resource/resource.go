@@ -3,23 +3,25 @@ package resource
 import "time"
 
 type Metrics struct {
-	Timestamp time.Time
-	Nodes     []Node
-	Pods      []Pod
+	Timestamp  time.Time
+	Nodes      []Node
+	Containers []Container
 }
 
 type Node struct {
-	Name string
-	Usage
+	Name           string
+	CPUUsedPercent float64
+	MemUsedPercent float64
 }
 
-type Pod struct {
-	Name      string
-	Namespace string
-	Usage
-}
-
-type Usage struct {
-	CPU float64
-	Mem float64
+type Container struct {
+	PodName        string
+	Namespace      string
+	Name           string
+	CPULimit       float64
+	MemLimit       float64
+	CPUUsed        float64
+	MemUsed        float64
+	CPUUsedPercent float64
+	MemUsedPercent float64
 }

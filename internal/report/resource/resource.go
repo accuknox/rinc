@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	v1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
@@ -45,9 +46,15 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 		return fmt.Errorf("fetching node usage: %w", err)
 	}
 
+	containers, err := r.containerUsage(ctx)
+	if err != nil {
+		return fmt.Errorf("fetching pod usage: %w", err)
+	}
+
 	metrics := types.Metrics{
-		Timestamp: now,
-		Nodes:     nodes,
+		Timestamp:  now,
+		Nodes:      nodes,
+		Containers: containers,
 	}
 
 	result, err := db.
@@ -107,7 +114,7 @@ func (r Reporter) Report(ctx context.Context, now time.Time) error {
 func (r Reporter) nodeUsage(ctx context.Context) ([]types.Node, error) {
 	var (
 		nodes   []types.Node
-		usage   []metric
+		metric  []nodeMetric
 		cntinue string
 	)
 	for {
@@ -122,7 +129,7 @@ func (r Reporter) nodeUsage(ctx context.Context) ([]types.Node, error) {
 			return nil, fmt.Errorf("fetching node metrics: %w", err)
 		}
 		for _, m := range metrics.Items {
-			usage = append(usage, metric{
+			metric = append(metric, nodeMetric{
 				name: m.Name,
 				cpu:  m.Usage.Cpu(),
 				mem:  m.Usage.Memory(),
@@ -152,17 +159,17 @@ func (r Reporter) nodeUsage(ctx context.Context) ([]types.Node, error) {
 			return nil, fmt.Errorf("fetching nodes: %w", err)
 		}
 		for _, n := range nodeList.Items {
-			var u *metric = nil
-			for _, m := range usage {
+			var nmetric *nodeMetric = nil
+			for _, m := range metric {
 				if m.name == n.Name {
-					u = &m
+					nmetric = &m
 				}
 			}
-			if u == nil {
+			if nmetric == nil {
 				continue
 			}
-			cpu := percentage(*u.cpu, *n.Status.Capacity.Cpu())
-			mem := percentage(*u.mem, *n.Status.Capacity.Memory())
+			cpu := percentage(*nmetric.cpu, *n.Status.Capacity.Cpu())
+			mem := percentage(*nmetric.mem, *n.Status.Capacity.Memory())
 			slog.LogAttrs(
 				ctx,
 				slog.LevelDebug,
@@ -172,11 +179,9 @@ func (r Reporter) nodeUsage(ctx context.Context) ([]types.Node, error) {
 				slog.Float64("mem", mem),
 			)
 			nodes = append(nodes, types.Node{
-				Name: n.Name,
-				Usage: types.Usage{
-					CPU: cpu,
-					Mem: mem,
-				},
+				Name:           n.Name,
+				CPUUsedPercent: cpu,
+				MemUsedPercent: mem,
 			})
 		}
 		cntinue = nodeList.Continue
@@ -193,11 +198,126 @@ func (r Reporter) nodeUsage(ctx context.Context) ([]types.Node, error) {
 	return nodes, nil
 }
 
-type metric struct {
-	name      string
-	namespace string
-	cpu       *resource.Quantity
-	mem       *resource.Quantity
+func (r Reporter) containerUsage(ctx context.Context) ([]types.Container, error) {
+	var (
+		containers []types.Container
+		metric     []podMetric
+		cntinue    string
+	)
+	for {
+		metrics, err := r.MetricsClient.
+			MetricsV1beta1().
+			PodMetricses(r.ResourceUtilizationConfig.Namespace).
+			List(ctx, metav1.ListOptions{
+				Limit:    30,
+				Continue: cntinue,
+			})
+		if err != nil {
+			return nil, fmt.Errorf("fetching pod metrics: %w", err)
+		}
+		for _, m := range metrics.Items {
+			metric = append(metric, podMetric{
+				name:       m.Name,
+				namespace:  m.Namespace,
+				containers: m.Containers,
+			})
+		}
+		cntinue = metrics.Continue
+		if cntinue == "" {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelInfo,
+				"received usage of all pods",
+			)
+			break
+		}
+	}
+
+	cntinue = ""
+	for {
+		podList, err := r.KubeClient.
+			CoreV1().
+			Pods(r.ResourceUtilizationConfig.Namespace).
+			List(ctx, metav1.ListOptions{
+				Limit:    30,
+				Continue: cntinue,
+			})
+		if err != nil {
+			return nil, fmt.Errorf("fetching pods: %w", err)
+		}
+		for _, p := range podList.Items {
+			var pmetric *podMetric = nil
+			for _, m := range metric {
+				if m.name == p.Name && m.namespace == p.Namespace {
+					pmetric = &m
+				}
+			}
+			if pmetric == nil {
+				continue
+			}
+			for _, c := range p.Spec.Containers {
+				var cmetric *v1beta1.ContainerMetrics = nil
+				for _, mc := range pmetric.containers {
+					if c.Name == mc.Name {
+						cmetric = &mc
+					}
+				}
+				if cmetric == nil {
+					continue
+				}
+				cpuCap := c.Resources.Limits.Cpu()
+				memCap := c.Resources.Limits.Memory()
+				cpuUsed := cmetric.Usage.Cpu()
+				memUsed := cmetric.Usage.Memory()
+				cpu := percentage(*cpuUsed, *cpuCap)
+				mem := percentage(*memUsed, *memCap)
+				containers = append(containers, types.Container{
+					PodName:        p.Name,
+					Namespace:      p.Namespace,
+					Name:           c.Name,
+					CPULimit:       cpuCap.AsApproximateFloat64(),
+					MemLimit:       memCap.AsApproximateFloat64(),
+					CPUUsed:        cpuUsed.AsApproximateFloat64(),
+					MemUsed:        memUsed.AsApproximateFloat64(),
+					CPUUsedPercent: cpu,
+					MemUsedPercent: mem,
+				})
+				slog.LogAttrs(
+					ctx,
+					slog.LevelDebug,
+					"CONTAINER UTILIZATION %",
+					slog.String("name", c.Name),
+					slog.String("pod", p.Name),
+					slog.String("namespace", p.Namespace),
+					slog.Float64("cpu", cpu),
+					slog.Float64("mem", mem),
+				)
+			}
+		}
+		cntinue = podList.Continue
+		if cntinue == "" {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelInfo,
+				"received capacity of all pods",
+			)
+			break
+		}
+	}
+
+	return containers, nil
+}
+
+type nodeMetric struct {
+	name string
+	cpu  *resource.Quantity
+	mem  *resource.Quantity
+}
+
+type podMetric struct {
+	name       string
+	namespace  string
+	containers []v1beta1.ContainerMetrics
 }
 
 func percentage(used, total resource.Quantity) float64 {
