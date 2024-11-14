@@ -144,3 +144,15 @@ ceph:
     - message: One or more OSDs are not part of data replication and recovery process
       when: sumUint(Status.OSDMap.OSDs, "In") != len(Status.OSDMap.OSDs)
       severity: warning
+pvUtilization:
+  # enable PV utilization report
+  enable: false
+  # PV utilization reporter depend on Prometheus to fetch the utilization.
+  #
+  # E.g., http://prometheus-kube-prometheus-prometheus.accuknox-monitoring.svc.cluster.local:9090
+  prometheusUrl: ""
+  alerts:
+    - message: |-
+        PVC `evalOnEach(PVs, "UtilizationPercent > 90", "PVC")`: PV usage above 90%
+      when: len(evalOnEach(PVs, "UtilizationPercent > 90", "PVC")) > 0
+      severity: critical

@@ -100,5 +100,18 @@ func (j Job) GenerateAll(ctx context.Context) error {
 		}
 	}
 
+	if j.conf.PVUtilization.Enable {
+		err := j.GeneratePVUtilizationReport(ctx, now)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"generating PV utilization report",
+				slog.String("error", err.Error()),
+			)
+			return fmt.Errorf("generating PV utilization report: %w", err)
+		}
+	}
+
 	return nil
 }

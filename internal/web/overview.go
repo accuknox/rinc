@@ -111,6 +111,13 @@ func (s Srv) Overview(c echo.Context) error {
 				ID:          id,
 				AlertsCount: count,
 			})
+		case db.CollectionPVUtilizaton:
+			statuses = append(statuses, view.OverviewStatus{
+				Name:        "PV Utilization",
+				Slug:        "pv-utilization",
+				ID:          id,
+				AlertsCount: count,
+			})
 		}
 	}
 

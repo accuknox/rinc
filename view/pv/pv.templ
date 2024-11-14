@@ -1,0 +1,103 @@
+package pv
+
+import (
+	"fmt"
+	"time"
+	"sort"
+
+	types "github.com/accuknox/rinc/types/pv"
+	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/view/partial"
+)
+
+templ Report(metrics types.Metrics, alerts []db.Alert) {
+	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
+	@pv(sortPVs(metrics.PVs))
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		PV Utilization ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+	<section class="px-4 mb-5">
+		<ul>
+			<li class="flex items-center">
+				<div class="success w-4 h-4 mr-4"></div>
+				<div>
+					Below 70%
+				</div>
+			</li>
+			<li class="flex items-center">
+				<div class="warning w-4 h-4 mr-4"></div>
+				<div>
+					70% - 90%
+				</div>
+			</li>
+			<li class="flex items-center">
+				<div class="error w-4 h-4 mr-4"></div>
+				<div>
+					Above 90%
+				</div>
+			</li>
+		</ul>
+	</section>
+}
+
+templ pv(list types.PVs) {
+	<section class="px-3 lg:px-5 mb-5">
+		<table class="full-width-table">
+			<thead>
+				<th>PVC Name</th>
+				<th>PVC Namespace</th>
+				<th>Capacity</th>
+				<th>Used</th>
+				<th>Available</th>
+				<th>Utilization (%)</th>
+			</thead>
+			<tbody>
+				for _, pv := range list {
+					<tr>
+						<td>{ pv.PVC }</td>
+						<td>{ pv.PVCNamespace }</td>
+						<td>{ toHumanReadable(pv.Capacity) }</td>
+						<td>{ toHumanReadable(pv.Used) }</td>
+						<td>{ toHumanReadable(pv.Available) }</td>
+						<td
+							class={
+								templ.KV("success", pv.UtilizationPercent < 70),
+								templ.KV("warning", pv.UtilizationPercent >= 70 && pv.UtilizationPercent < 90),
+								templ.KV("error", pv.UtilizationPercent >= 90),
+							}
+						>
+							{ fmt.Sprintf("%.2f", pv.UtilizationPercent) }
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}
+
+func sortPVs(list types.PVs) types.PVs {
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].UtilizationPercent > list[j].UtilizationPercent
+	})
+	return list
+}
+
+func toHumanReadable(byts float64) string {
+	u := float64(byts) * 9.313226e-10
+	if int(u) != 0 {
+		return fmt.Sprintf("%.2f GiB", u)
+	}
+	u = float64(byts) * 9.536743e-7
+	if int(u) != 0 {
+		return fmt.Sprintf("%.2f MiB", u)
+	}
+	u = float64(byts) / 1024
+	if int(u) != 0 {
+		return fmt.Sprintf("%.2f KiB", u)
+	}
+	return fmt.Sprintf("%d B", uint64(byts))
+}
