@@ -156,3 +156,119 @@ pvUtilization:
         PVC `evalOnEach(PVs, "UtilizationPercent > 90", "PVC")`: PV usage above 90%
       when: len(evalOnEach(PVs, "UtilizationPercent > 90", "PVC")) > 0
       severity: critical
+resourceUtilization:
+  # enable node & pod resource utilization reporter
+  enable: false
+  # kubernetes namespace that the resource utilization reporter will be limited
+  # to. Leave blank for all namespaces.
+  namespace: ""
+  alerts:
+    - message: |-
+        Node `evalOnEach(Nodes, "CPUUsedPercent > 90", "Name")` CPU usage above 90%
+      when: len(evalOnEach(Nodes, "CPUUsedPercent > 90", "Name")) > 0
+      severity: critical
+    - message: |-
+        Node `evalOnEach(Nodes, "MemUsedPercent > 90", "Name")` Memory usage above 90%
+      when: len(evalOnEach(Nodes, "MemUsedPercent > 90", "Name")) > 0
+      severity: critical
+    - message: |-
+        Container `evalOnEach(Containers, "CPUUsedPercent > 90", "Name")` CPU usage above 90%
+      when: len(evalOnEach(Containers, "CPUUsedPercent > 90", "Name")) > 0
+      severity: critical
+    - message: |-
+        Container `evalOnEach(Containers, "MemUsedPercent > 90", "Name")` Memory usage above 90%
+      when: len(evalOnEach(Containers, "MemUsedPercent > 90", "Name")) > 0
+      severity: critical
+connectivity:
+  vault:
+    # enable vault connectivity check
+    enable: false
+    # vault address. E.g., http://accuknox-vault.accuknox-vault.svc.cluster.local:8200
+    addr: ""
+  mongodb:
+    # enable mongodb connectivity check
+    enable: false
+    # mongodb connection uri.
+    #
+    # E.g., mongodb://accuknox-mongodb-rs0.accuknox-mongodb.svc.cluster.local:27017
+    uri: ""
+  neo4j:
+    # enable neo4j connectivity check
+    enable: false
+    # neo4j connection URI
+    #
+    # E.g., neo4j://neo4j.accuknox-neo4j.svc.cluster.local:7687
+    uri: ""
+    # neo4j basic auth username
+    username: ""
+    # neo4j basic auth password
+    password: ""
+  postgres:
+    # enable postgresql connectivity check
+    enable: false
+    # postgres server host (without the port)
+    #
+    # E.g., postgres-replicas.accuknox-postgresql.svc.cluster.local
+    host: ""
+    # postgresql server port.
+    #
+    # Default: 5432
+    port: 5432
+    # postgresql auth username.
+    username: ""
+    # postgresql auth password.
+    password: ""
+  redis:
+    # enable redis connectivity check
+    enable: false
+    # redis/keydb address
+    #
+    # E.g., keydb-service.keydb.svc.cluster.local:6379
+    addr: ""
+  metabase:
+    # enable metabase connectivity check
+    enable: false
+    # metabase base url
+    #
+    # E.g., http://metabase-service.metabase.svc.cluster.local
+    baseUrl: ""
+  alerts: []
+    # - message: "Vault is not reachable"
+    #   when: Vault.Reachable == false
+    #   severity: critical
+    # - message: "Vault is not initialized"
+    #   when: Vault.Reachable && Vault.Initialized == false
+    #   severity: warning
+    # - message: "Vault is sealed"
+    #   when: Vault.Reachable && Vault.Sealed
+    #   severity: critical
+    # - message: "MongoDB is not reachable"
+    #   when: Mongodb.Reachable == false
+    #   severity: critical
+    # - message: "Neo4j is not reachable"
+    #   when: Neo4j.Reachable == false
+    #   severity: critical
+    # - message: "Postgres is not reachable"
+    #   when: Postgres.Reachable == false
+    #   severity: critical
+    # - message: "KeyDB is not reachable"
+    #   when: Redis.Reachable == false
+    #   severity: critical
+    # - message: "Metabase is not healthy"
+    #   when: Metabase.Healthy == false
+    #   severity: critical
+podStatus:
+  # enable pod status reporter
+  enable: false
+  # kubernetes namespace that the pod status reporter will be limited to. Leave
+  # blank for all namespaces.
+  namespace: ""
+  alerts:
+    - message: |-
+        Deployment pods `evalOnEach(Deployments ~> "Pods", "Status != \"Running\"", "Name")` are not running
+      when: len(evalOnEach(Deployments ~> "Pods", "Status != \"Running\"", "Name")) > 0
+      severity: warning
+    - message: |-
+        Statefulset pods `evalOnEach(Statefulsets ~> "Pods", "Status != \"Running\"", "Name")` are not running
+      when: len(evalOnEach(Statefulsets ~> "Pods", "Status != \"Running\"", "Name")) > 0
+      severity: warning

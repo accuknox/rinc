@@ -118,6 +118,27 @@ func (s Srv) Overview(c echo.Context) error {
 				ID:          id,
 				AlertsCount: count,
 			})
+		case db.CollectionResourceUtilization:
+			statuses = append(statuses, view.OverviewStatus{
+				Name:        "Resource Utilization",
+				Slug:        "resource-utilization",
+				ID:          id,
+				AlertsCount: count,
+			})
+		case db.CollectionConnectivity:
+			statuses = append(statuses, view.OverviewStatus{
+				Name:        "Connectivity",
+				Slug:        "connectivity",
+				ID:          id,
+				AlertsCount: count,
+			})
+		case db.CollectionPodStatus:
+			statuses = append(statuses, view.OverviewStatus{
+				Name:        "Pod Status",
+				Slug:        "podstatus",
+				ID:          id,
+				AlertsCount: count,
+			})
 		}
 	}
 

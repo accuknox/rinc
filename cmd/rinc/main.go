@@ -61,7 +61,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("kubernetes client: %s", err.Error())
 		}
-		job := job.New(*conf, kubeClient, mongo)
+		metricsClient, err := kube.NewMetricsClient(conf.KubernetesClient)
+		if err != nil {
+			log.Fatalf("kubernetes metrics client: %s", err.Error())
+		}
+		job := job.New(*conf, kubeClient, metricsClient, mongo)
 		err = job.GenerateAll(context.Background())
 		if err != nil {
 			log.Fatalf("generating reports: %s", err.Error())

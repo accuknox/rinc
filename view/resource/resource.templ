@@ -1,0 +1,241 @@
+package resource
+
+import (
+	"fmt"
+	"sort"
+	"time"
+
+	"github.com/accuknox/rinc/internal/db"
+	types "github.com/accuknox/rinc/types/resource"
+	"github.com/accuknox/rinc/view/partial"
+)
+
+templ Report(metrics types.Metrics, alerts []db.Alert) {
+	@heading(metrics.Timestamp)
+	@partial.Alerts(alerts)
+	@nodes(sortNodes(metrics.Nodes))
+	@pods(sortContainers(metrics.Containers))
+}
+
+templ heading(stamp time.Time) {
+	<h1 class="text-3xl font-bold flex items-center justify-center gap-2 my-5">
+		Resource Utilization ({ stamp.UTC().Format("2006-01-02 15:04:05") } UTC)
+	</h1>
+	<section class="px-4 mb-5">
+		<ul>
+			<li class="flex items-center">
+				<div class="success w-4 h-4 mr-4"></div>
+				<div>
+					Below 80%
+				</div>
+			</li>
+			<li class="flex items-center">
+				<div class="warning w-4 h-4 mr-4"></div>
+				<div>
+					80% - 90%
+				</div>
+			</li>
+			<li class="flex items-center">
+				<div class="error w-4 h-4 mr-4"></div>
+				<div>
+					Above 90%
+				</div>
+			</li>
+		</ul>
+	</section>
+}
+
+templ nodes(list []types.Node) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Nodes</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Name</th>
+				<th>CPU Usage</th>
+				<th>Mem Usage</th>
+			</thead>
+			<tbody>
+				for _, n := range list {
+					<tr>
+						<td>{ n.Name }</td>
+						<td
+							class={
+								templ.KV("error", n.CPUUsedPercent >= 90),
+								templ.KV("warning", n.CPUUsedPercent >= 80 && n.CPUUsedPercent < 90),
+								templ.KV("success", n.CPUUsedPercent < 80),
+							}
+						>
+							{ fmt.Sprintf("%.2f%%", n.CPUUsedPercent) }
+						</td>
+						<td
+							class={
+								templ.KV("error", n.MemUsedPercent >= 90),
+								templ.KV("warning", n.MemUsedPercent >= 80 && n.MemUsedPercent < 90),
+								templ.KV("success", n.MemUsedPercent < 80),
+							}
+						>
+							{ fmt.Sprintf("%.2f%%", n.MemUsedPercent) }
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}
+
+templ pods(list []types.Container) {
+	<section class="px-3 lg:px-5 mb-5">
+		<h2 class="text-xl font-bold mb-2">Pods</h2>
+		<table class="full-width-table">
+			<thead>
+				<th>Namespace</th>
+				<th>Pod Name</th>
+				<th>Container Name</th>
+				<th>CPU Limit (m)</th>
+				<th>Mem Limit</th>
+				<th>CPU Usage (m)</th>
+				<th>Mem Usage</th>
+				<th>CPU Usage (%)</th>
+				<th>Mem Usage (%)</th>
+			</thead>
+			<tbody>
+				for _, c := range list {
+					<tr>
+						<td>{ c.Namespace }</td>
+						<td>{ c.PodName }</td>
+						<td>{ c.Name }</td>
+						<td>{ toHumanReadableCPU(c.CPULimit) }</td>
+						<td>{ toHumanReadableMem(c.MemLimit) }</td>
+						<td>{ fmt.Sprintf("%.2f", c.CPUUsed * 1000) }</td>
+						<td>{ toHumanReadableMem(c.MemUsed) }</td>
+						<td
+							class={
+								templ.KV("error", c.CPUUsedPercent >= 90),
+								templ.KV("warning", c.CPUUsedPercent >= 80 && c.CPUUsedPercent < 90),
+								templ.KV("success", c.CPUUsedPercent < 80),
+							}
+						>
+							{ toHumanReadabePercent(c.CPUUsedPercent, c.CPULimit) }
+						</td>
+						<td
+							class={
+								templ.KV("error", c.MemUsedPercent >= 90),
+								templ.KV("warning", c.MemUsedPercent >= 80 && c.MemUsedPercent < 90),
+								templ.KV("success", c.MemUsedPercent < 80),
+							}
+						>
+							{ toHumanReadabePercent(c.MemUsedPercent, c.MemLimit) }
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</section>
+}
+
+func toHumanReadableMem(byts float64) string {
+	if byts == 0 {
+		return "N/A"
+	}
+	u := float64(byts) * 9.313226e-10
+	if int(u) != 0 {
+		return fmt.Sprintf("%.0f Gi", u)
+	}
+	u = float64(byts) * 9.536743e-7
+	if int(u) != 0 {
+		return fmt.Sprintf("%.0f Mi", u)
+	}
+	u = float64(byts) / 1024
+	if int(u) != 0 {
+		return fmt.Sprintf("%.0f Ki", u)
+	}
+	return fmt.Sprintf("%d B", uint64(byts))
+}
+
+func toHumanReadableCPU(cores float64) string {
+	if cores == 0 {
+		return "N/A"
+	}
+	return fmt.Sprintf("%.0f", cores*1000)
+}
+
+func toHumanReadabePercent(usagePercent, limit float64) string {
+	if limit == 0 {
+		return "N/A"
+	}
+	return fmt.Sprintf("%.2f", usagePercent)
+}
+
+func sortContainers(containers []types.Container) []types.Container {
+	sort.Slice(containers, func(i, j int) bool {
+		if containers[i].MemLimit == 0 && containers[i].CPULimit == 0 {
+			return false
+		}
+		if containers[j].MemLimit == 0 && containers[j].CPULimit == 0 {
+			return true
+		}
+		var iPriority, jPriority int
+		if containers[i].MemUsedPercent >= 80 && containers[i].MemUsedPercent < 90 {
+			iPriority += 1
+		} else if containers[i].MemUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if containers[i].CPUUsedPercent >= 80 && containers[i].CPUUsedPercent < 90 {
+			iPriority += 1
+		} else if containers[i].CPUUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if containers[j].MemUsedPercent >= 80 && containers[j].MemUsedPercent < 90 {
+			jPriority += 1
+		} else if containers[j].MemUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if containers[j].CPUUsedPercent >= 80 && containers[j].CPUUsedPercent < 90 {
+			jPriority += 1
+		} else if containers[j].CPUUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if iPriority != jPriority {
+			return iPriority > jPriority
+		}
+		if containers[i].MemLimit == 0 || containers[i].CPULimit == 0 {
+			return false
+		}
+		if containers[j].MemLimit == 0 || containers[j].CPULimit == 0 {
+			return true
+		}
+		return containers[i].MemUsedPercent > containers[j].MemUsedPercent
+	})
+	return containers
+}
+
+func sortNodes(nodes []types.Node) []types.Node {
+	sort.Slice(nodes, func(i, j int) bool {
+		var iPriority, jPriority int
+		if nodes[i].MemUsedPercent >= 80 && nodes[i].MemUsedPercent < 90 {
+			iPriority += 1
+		} else if nodes[i].MemUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if nodes[i].CPUUsedPercent >= 80 && nodes[i].CPUUsedPercent < 90 {
+			iPriority += 1
+		} else if nodes[i].CPUUsedPercent >= 90 {
+			iPriority += 2
+		}
+		if nodes[j].MemUsedPercent >= 80 && nodes[j].MemUsedPercent < 90 {
+			jPriority += 1
+		} else if nodes[j].MemUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if nodes[j].CPUUsedPercent >= 80 && nodes[j].CPUUsedPercent < 90 {
+			jPriority += 1
+		} else if nodes[j].CPUUsedPercent >= 90 {
+			jPriority += 2
+		}
+		if iPriority != jPriority {
+			return iPriority > jPriority
+		}
+		return nodes[i].MemUsedPercent > nodes[j].MemUsedPercent
+	})
+	return nodes
+}

@@ -11,23 +11,26 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"k8s.io/client-go/kubernetes"
+	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
 // Job runs inside the Kubernetes cluster and generates status and metrics
 // reports.
 type Job struct {
-	conf       conf.C
-	kubeClient *kubernetes.Clientset
-	mongo      *mongo.Client
+	conf          conf.C
+	kubeClient    *kubernetes.Clientset
+	metricsClient *metrics.Clientset
+	mongo         *mongo.Client
 }
 
 // New returns a new reporting Job object.
-func New(c conf.C, k *kubernetes.Clientset, mongo *mongo.Client) Job {
+func New(c conf.C, k *kubernetes.Clientset, m *metrics.Clientset, mongo *mongo.Client) Job {
 	slog.SetDefault(util.NewLogger(c.Log))
 	return Job{
-		conf:       c,
-		kubeClient: k,
-		mongo:      mongo,
+		conf:          c,
+		kubeClient:    k,
+		metricsClient: m,
+		mongo:         mongo,
 	}
 }
 
@@ -110,6 +113,43 @@ func (j Job) GenerateAll(ctx context.Context) error {
 				slog.String("error", err.Error()),
 			)
 			return fmt.Errorf("generating PV utilization report: %w", err)
+		}
+	}
+
+	if j.conf.ResourceUtilization.Enable {
+		err := j.GenerateResourceUtilizationReport(ctx, now)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"generating resource utilization report",
+				slog.String("error", err.Error()),
+			)
+			return fmt.Errorf("generating resource utilization report: %w", err)
+		}
+	}
+
+	err := j.GenerateConnectivityReport(ctx, now)
+	if err != nil {
+		slog.LogAttrs(
+			ctx,
+			slog.LevelError,
+			"generating connectivity status report",
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("generating connectivity status report: %w", err)
+	}
+
+	if j.conf.PodStatus.Enable {
+		err := j.GeneratePodStatusReport(ctx, now)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"generating pod status report",
+				slog.String("error", err.Error()),
+			)
+			return fmt.Errorf("generating pod status report: %w", err)
 		}
 	}
 

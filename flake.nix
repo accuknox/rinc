@@ -17,10 +17,10 @@
           packages = [
             pkgs.nixd
             pkgs.nixpkgs-fmt
-            pkgs.go
-            pkgs.go-tools
-            pkgs.gopls
-            pkgs.templ
+            unstable.go
+            unstable.go-tools
+            unstable.gopls
+            unstable.templ
             pkgs.air
             pkgs.nodejs
             pkgs.nodePackages.pnpm
