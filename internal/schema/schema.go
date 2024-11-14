@@ -9,6 +9,7 @@ import (
 	"github.com/accuknox/rinc/types/imagetag"
 	"github.com/accuknox/rinc/types/longjobs"
 	"github.com/accuknox/rinc/types/rabbitmq"
+	"github.com/accuknox/rinc/types/resource"
 
 	"github.com/invopop/jsonschema"
 )
@@ -32,7 +33,7 @@ func Generate(target string) ([]byte, error) {
 	case db.CollectionLongJobs:
 		schema = r.Reflect(longjobs.Metrics{})
 	case db.CollectionResourceUtilization:
-		schema = r.Reflect(longjobs.Metrics{})
+		schema = r.Reflect(resource.Metrics{})
 	default:
 		return nil, fmt.Errorf("invalid target: %q", target)
 	}
