@@ -31,6 +31,8 @@ func Generate(target string) ([]byte, error) {
 		schema = r.Reflect(dass.Metrics{})
 	case db.CollectionLongJobs:
 		schema = r.Reflect(longjobs.Metrics{})
+	case db.CollectionResourceUtilization:
+		schema = r.Reflect(longjobs.Metrics{})
 	default:
 		return nil, fmt.Errorf("invalid target: %q", target)
 	}
