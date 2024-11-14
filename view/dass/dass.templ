@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/accuknox/rinc/internal/db"
+	"github.com/accuknox/rinc/internal/util"
 	types "github.com/accuknox/rinc/types/dass"
 	"github.com/accuknox/rinc/view/partial"
 )
@@ -17,8 +18,8 @@ const (
 templ Report(metrics types.Metrics, alerts []db.Alert) {
 	@heading(metrics.Timestamp)
 	@partial.Alerts(alerts)
-	@resource(kindDeployment, metrics.Deployments)
-	@resource(kindStatefulset, metrics.Statefulsets)
+	@resource(kindDeployment, metrics.Deployments, metrics.Timestamp)
+	@resource(kindStatefulset, metrics.Statefulsets, metrics.Timestamp)
 }
 
 templ heading(stamp time.Time) {
@@ -55,7 +56,7 @@ templ heading(stamp time.Time) {
 	</section>
 }
 
-templ resource(kind string, resources []types.Resource) {
+templ resource(kind string, resources []types.Resource, stamp time.Time) {
 	<section class="px-3 lg:px-5 mb-5">
 		<h2 class="text-xl font-bold mb-2">{ kind }</h2>
 		<table class="full-width-table">
@@ -67,6 +68,7 @@ templ resource(kind string, resources []types.Resource) {
 				<th>Available</th>
 				<th>Events</th>
 				<th>Age</th>
+				<th>Pods</th>
 			</thead>
 			<tbody>
 				for _, r := range resources {
@@ -113,6 +115,19 @@ templ resource(kind string, resources []types.Resource) {
 							}
 						</td>
 						<td>{ r.Age.Round(time.Second).String() }</td>
+						<td>
+							<a
+								class="text-primary underline"
+								href={ templ.URL(fmt.Sprintf(
+									"/%s/podstatus#%s-%s",
+									stamp.Format(util.IsosecLayout),
+									r.Name,
+									r.Namespace,
+								)) }
+							>
+								Link
+							</a>
+						</td>
 					</tr>
 				}
 			</tbody>

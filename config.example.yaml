@@ -144,6 +144,7 @@ ceph:
     - message: One or more OSDs are not part of data replication and recovery process
       when: sumUint(Status.OSDMap.OSDs, "In") != len(Status.OSDMap.OSDs)
       severity: warning
+<<<<<<< HEAD
 connectivity:
   vault:
     # enable vault connectivity check
@@ -222,3 +223,20 @@ connectivity:
     # - message: "Metabase is not healthy"
     #   when: Metabase.Healthy == false
     #   severity: critical
+=======
+podStatus:
+  # enable pod status reporter
+  enable: false
+  # kubernetes namespace that the pod status reporter will be limited to. Leave
+  # blank for all namespaces.
+  namespace: ""
+  alerts:
+    - message: |-
+        Deployment pods `evalOnEach(Deployments ~> "Pods", "Status != \"Running\"", "Name")` are not running
+      when: len(evalOnEach(Deployments ~> "Pods", "Status != \"Running\"", "Name")) > 0
+      severity: warning
+    - message: |-
+        Statefulset pods `evalOnEach(Statefulsets ~> "Pods", "Status != \"Running\"", "Name")` are not running
+      when: len(evalOnEach(Statefulsets ~> "Pods", "Status != \"Running\"", "Name")) > 0
+      severity: warning
+>>>>>>> main

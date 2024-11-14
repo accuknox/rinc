@@ -50,6 +50,7 @@ func (s Srv) Run(ctx context.Context) {
 	s.router.GET("/:id/longjobs", s.Longjobs)
 	s.router.GET("/:id/deployment-and-statefulset-status", s.Dass)
 	s.router.GET("/:id/connectivity", s.Connectivity)
+	s.router.GET("/:id/podstatus", s.PodStatus)
 
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()

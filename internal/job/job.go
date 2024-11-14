@@ -111,5 +111,18 @@ func (j Job) GenerateAll(ctx context.Context) error {
 		return fmt.Errorf("generating connectivity status report: %w", err)
 	}
 
+	if j.conf.PodStatus.Enable {
+		err := j.GeneratePodStatusReport(ctx, now)
+		if err != nil {
+			slog.LogAttrs(
+				ctx,
+				slog.LevelError,
+				"generating pod status report",
+				slog.String("error", err.Error()),
+			)
+			return fmt.Errorf("generating pod status report: %w", err)
+		}
+	}
+
 	return nil
 }

@@ -45,6 +45,8 @@ type C struct {
 	// Connectivity contains configuration related to the connectivity status
 	// reporter.
 	Connectivity Connectivity `koanf:"connectivity"`
+	// PodStatus contains configuration related to the pod status reporter.
+	PodStatus PodStatus `koanf:"podStatus"`
 }
 
 // New creates a configuration using the provided arguments and config file.
